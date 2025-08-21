@@ -25,6 +25,7 @@ import {
   Sun,
   LogIn,
   LogOut,
+  X,
 } from "lucide-react";
 import ModernSettingsModal from "./components/ModernSettingsModal";
 import AuthModal from "./components/AuthModal";
@@ -596,6 +597,68 @@ export default function App() {
     );
   };
 
+  // Page d'accueil pour utilisateurs non connectés
+  if (!user) {
+    return (
+      <div className={`min-h-screen ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900' : 'bg-gradient-to-br from-blue-50 via-white to-blue-100'} transition-colors duration-200`}>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            {/* Logo et titre */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-xl mb-6">
+                <Wallet className="h-10 w-10 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                Akuma Budget
+              </h1>
+              <p className="text-lg text-gray-600 dark:text-gray-300">
+                Gestion de budget personnelle moderne
+              </p>
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="space-y-4">
+              <button
+                onClick={() => setShowAuth(true)}
+                className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3"
+              >
+                <LogIn className="h-5 w-5" />
+                Se connecter
+              </button>
+              
+              <button
+                onClick={() => setShowAuth(true)}
+                className="w-full px-6 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-600 transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3"
+              >
+                <Plus className="h-5 w-5" />
+                Créer un compte
+              </button>
+            </div>
+
+            {/* Toggle Dark Mode */}
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-3 rounded-xl bg-white/20 dark:bg-gray-800/50 backdrop-blur-sm text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-gray-700/50 transition-all duration-200"
+                title="Changer le thème"
+              >
+                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal d'authentification */}
+        <AuthModal
+          isOpen={showAuth}
+          onClose={() => setShowAuth(false)}
+          onAuthSuccess={handleAuthSuccess}
+          darkMode={darkMode}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-neutral-50'} transition-colors duration-200`}>
       <div className="mx-auto max-w-7xl space-y-4 p-4">
@@ -608,55 +671,36 @@ export default function App() {
               <p className="text-sm text-gray-600 dark:text-gray-400">Gestion de budget personnelle</p>
             </div>
           </div>
-                     <div className="flex items-center gap-3">
-             {user ? (
-               <div className="flex items-center gap-2">
-                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                   {user.email}
-                 </span>
-                 <button
-                   onClick={() => setShowSettings(true)}
-                   className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
-                   title="Paramètres"
-                 >
-                   <SettingsIcon className="h-5 w-5" />
-                 </button>
-                 <button
-                   onClick={handleSignOut}
-                   className="px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-1"
-                   title="Se déconnecter"
-                 >
-                   <LogOut className="h-4 w-4" />
-                   Déconnexion
-                 </button>
-               </div>
-             ) : (
-               <button
-                 onClick={() => setShowAuth(true)}
-                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-               >
-                 <LogIn className="h-4 w-4" />
-                 Se connecter
-               </button>
-             )}
-             <button
-               onClick={() => setDarkMode(!darkMode)}
-               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
-             >
-               {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-             </button>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Rechercher..."
-                className="rounded-xl border border-gray-300 dark:border-gray-600 px-4 py-2 pl-10 w-64 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {user.email}
+              </span>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                title="Paramètres"
+              >
+                <SettingsIcon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-1"
+                title="Se déconnecter"
+              >
+                <LogOut className="h-4 w-4" />
+                Déconnexion
+              </button>
             </div>
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+            >
+              {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+
 
         {/* Nouveau formulaire unifié */}
         {user && (
@@ -687,6 +731,31 @@ export default function App() {
                 <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Solde</div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Barre de recherche - Position fixe après les indicateurs */}
+        {user && (
+          <div className="flex justify-center px-4">
+            <div className="relative w-full max-w-lg">
+              <input
+                type="text"
+                placeholder="Rechercher dans vos transactions..."
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 px-5 py-3 pl-11 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-none focus:border-blue-400 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-400/30 transition-all duration-150"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  title="Effacer la recherche"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
