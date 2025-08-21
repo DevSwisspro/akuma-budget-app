@@ -77,6 +77,7 @@ export default function App() {
   const [budgets, setBudgets] = useState([]);
   const [showSettings, setShowSettings] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // 'login' ou 'signup'
   const [showBudgetManager, setShowBudgetManager] = useState(false);
 
 
@@ -619,7 +620,10 @@ export default function App() {
             {/* Boutons d'action */}
             <div className="space-y-4">
               <button
-                onClick={() => setShowAuth(true)}
+                onClick={() => {
+                  setAuthMode('login');
+                  setShowAuth(true);
+                }}
                 className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3"
               >
                 <LogIn className="h-5 w-5" />
@@ -627,7 +631,10 @@ export default function App() {
               </button>
               
               <button
-                onClick={() => setShowAuth(true)}
+                onClick={() => {
+                  setAuthMode('signup');
+                  setShowAuth(true);
+                }}
                 className="w-full px-6 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-600 transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3"
               >
                 <Plus className="h-5 w-5" />
@@ -654,6 +661,7 @@ export default function App() {
           onClose={() => setShowAuth(false)}
           onAuthSuccess={handleAuthSuccess}
           darkMode={darkMode}
+          initialMode={authMode}
         />
       </div>
     );
@@ -939,6 +947,7 @@ export default function App() {
           onClose={() => setShowAuth(false)}
           onAuthSuccess={handleAuthSuccess}
           darkMode={darkMode}
+          initialMode={authMode}
         />
       </div>
     </div>

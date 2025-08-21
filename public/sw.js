@@ -1,8 +1,10 @@
 // Service Worker pour Akuma Budget PWA
-// Version 1.0 - Cache basique et stratégies réseau
+// Version 2.0 - Cache avec versioning automatique et mise à jour forcée
 
-const CACHE_NAME = 'akuma-budget-v1.0';
-const STATIC_CACHE_NAME = 'akuma-budget-static-v1.0';
+// Version automatique basée sur la date de build
+const APP_VERSION = '2.1-' + Date.now();
+const CACHE_NAME = `akuma-budget-${APP_VERSION}`;
+const STATIC_CACHE_NAME = `akuma-budget-static-${APP_VERSION}`;
 
 // Ressources essentielles à mettre en cache
 const ESSENTIAL_RESOURCES = [
@@ -48,18 +50,31 @@ self.addEventListener('activate', event => {
   console.log('🚀 Service Worker: Activation en cours...');
   
   event.waitUntil(
-    // Nettoyage des anciens caches
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE_NAME) {
-            console.log('🗑️ Suppression ancien cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      console.log('✅ Service Worker activé');
+    Promise.all([
+      // Nettoyage agressif de tous les anciens caches
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE_NAME) {
+              console.log('🗑️ Suppression ancien cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      // Forcer le rechargement de toutes les pages ouvertes (compatible tous navigateurs)
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+        return Promise.all(
+          clients.map(client => {
+            if (client.url.includes(self.location.origin)) {
+              console.log('🔄 Force rechargement page:', client.url);
+              return client.navigate(client.url);
+            }
+          })
+        );
+      })
+    ]).then(() => {
+      console.log('✅ Service Worker activé avec mise à jour forcée');
       // Prendre contrôle immédiatement
       return self.clients.claim();
     })

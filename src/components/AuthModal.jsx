@@ -8,9 +8,9 @@ import {
 } from '../lib/supabase-auth';
 import { supabase } from '../lib/supabase';
 
-const AuthModal = ({ isOpen, onClose, onAuthSuccess, darkMode = false }) => {
+const AuthModal = ({ isOpen, onClose, onAuthSuccess, darkMode = false, initialMode = 'login' }) => {
   // États du formulaire
-  const [activeTab, setActiveTab] = useState('login'); // 'login' ou 'signup'
+  const [activeTab, setActiveTab] = useState(initialMode); // 'login' ou 'signup'
   const [step, setStep] = useState('form'); // 'form', 'otp', 'success'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -48,9 +48,9 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess, darkMode = false }) => {
       setStep('form');
       setError('');
       setSuccess('');
-      setActiveTab('login');
+      setActiveTab(initialMode);
     }
-  }, [isOpen]);
+  }, [isOpen, initialMode]);
 
   // Validation des formulaires
   const validateSignupForm = () => {
@@ -320,29 +320,6 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess, darkMode = false }) => {
         {/* Contenu du modal */}
         {step === 'form' && (
           <>
-            {/* Onglets */}
-            <div className="mb-6 flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1">
-              <button
-                onClick={() => setActiveTab('login')}
-                className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'login'
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                Connexion
-              </button>
-              <button
-                onClick={() => setActiveTab('signup')}
-                className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'signup'
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                Inscription
-              </button>
-            </div>
 
             {/* Formulaire de connexion */}
             {activeTab === 'login' && (
