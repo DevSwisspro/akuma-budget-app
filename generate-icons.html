@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Générateur d'icônes PWA Akuma Budget</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        canvas { margin: 10px; border: 1px solid #ccc; }
+        .download-section { margin-top: 20px; }
+        button { padding: 10px 20px; margin: 5px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <h1>🎨 Générateur d'icônes PWA - Akuma Budget</h1>
+    <p>Génération automatique des icônes pour l'installation PWA sur iPhone/Android</p>
+    
+    <div class="download-section">
+        <button onclick="generateAllIcons()">Générer toutes les icônes PWA</button>
+        <button onclick="downloadAll()">Télécharger tout</button>
+    </div>
+    
+    <div id="canvas-container"></div>
+    
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        const canvases = {};
+        
+        function createIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Arrière-plan dégradé
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#3b82f6');
+            gradient.addColorStop(1, '#1e40af');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Texte principal
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Emoji/Logo
+            const emojiSize = Math.floor(size * 0.4);
+            ctx.font = `${emojiSize}px Arial`;
+            ctx.fillText('💰', size/2, size/2 - size*0.1);
+            
+            // Texte
+            const textSize = Math.floor(size * 0.15);
+            ctx.font = `bold ${textSize}px Arial`;
+            ctx.fillText('AKUMA', size/2, size/2 + size*0.2);
+            
+            const subtextSize = Math.floor(size * 0.08);
+            ctx.font = `${subtextSize}px Arial`;
+            ctx.fillText('BUDGET', size/2, size/2 + size*0.35);
+            
+            return canvas;
+        }
+        
+        function generateAllIcons() {
+            const container = document.getElementById('canvas-container');
+            container.innerHTML = '<h2>Icônes générées :</h2>';
+            
+            sizes.forEach(size => {
+                const canvas = createIcon(size);
+                canvas.title = `Icon ${size}x${size}px`;
+                canvases[size] = canvas;
+                
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = `<p>Icône ${size}x${size}px</p>`;
+                wrapper.appendChild(canvas);
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = `Télécharger ${size}x${size}`;
+                downloadBtn.onclick = () => downloadIcon(size);
+                wrapper.appendChild(downloadBtn);
+                
+                container.appendChild(wrapper);
+            });
+        }
+        
+        function downloadIcon(size) {
+            const canvas = canvases[size];
+            const link = document.createElement('a');
+            link.download = `icon-${size}x${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function downloadAll() {
+            sizes.forEach(size => {
+                setTimeout(() => downloadIcon(size), size * 10); // Délai pour éviter blocage
+            });
+        }
+        
+        // Génération automatique au chargement
+        window.onload = generateAllIcons;
+    </script>
+</body>
+</html>

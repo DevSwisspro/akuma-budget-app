@@ -2,18 +2,44 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    
+    <!-- Favicon et icônes de base -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Application de gestion de budget personnelle Akuma Budget" />
+    
+    <!-- Configuration viewport pour mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <!-- Métadonnées SEO et PWA -->
+    <meta name="description" content="Application moderne de gestion de budget personnel avec authentification sécurisée OTP" />
+    <meta name="keywords" content="budget, finance, gestion, argent, économie, PWA, mobile" />
+    <meta name="author" content="Akuma Budget" />
+    
+    <!-- Configuration PWA -->
     <meta name="theme-color" content="#3b82f6" />
+    <meta name="background-color" content="#ffffff" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-title" content="Akuma Budget" />
+    
+    <!-- Configuration iOS spécifique -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Akuma Budget" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     
-    <!-- PWA Manifest temporairement désactivé pour éviter les erreurs 404 -->
-    <!-- <link rel="manifest" href="/manifest.webmanifest" /> -->
+    <!-- Configuration Android -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Akuma Budget" />
     
-    <title>Akuma Budget - Gestion de budget personnelle</title>
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    
+    <!-- Configuration Microsoft -->
+    <meta name="msapplication-TileColor" content="#3b82f6" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    
+    <title>Akuma Budget - Gestion Financière PWA</title>
   </head>
   <body>
     <div id="root"></div>

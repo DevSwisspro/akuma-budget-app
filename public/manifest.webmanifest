@@ -1,12 +1,16 @@
 {
-  "name": "Akuma Budget",
+  "name": "Akuma Budget - Gestion Financière",
   "short_name": "Akuma Budget",
-  "description": "Application de gestion de budget personnelle",
+  "description": "Application moderne de gestion de budget personnel avec authentification OTP",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "fr-FR",
+  "dir": "ltr",
+  "categories": ["finance", "productivity", "business"],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
