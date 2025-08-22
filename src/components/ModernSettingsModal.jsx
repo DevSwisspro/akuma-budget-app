@@ -18,9 +18,24 @@ import {
   Mail,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  Download,
+  Upload,
+  FileText,
+  Database,
+  RefreshCw,
+  Shield,
+  Plus,
+  FileSpreadsheet,
+  AlertTriangle
 } from 'lucide-react';
 import { signOut, updateEmail, changePassword } from '../lib/supabase-auth';
+import { 
+  downloadExportFile, 
+  importUserData, 
+  readImportFile, 
+  validateImportFile 
+} from '../lib/data-export-import';
 import BudgetManagerInline from './BudgetManagerInline';
 
 export default function ModernSettingsModal({ 
@@ -57,6 +72,16 @@ export default function ModernSettingsModal({
     confirm: false
   });
 
+  // États pour l'import/export
+  const [exportLoading, setExportLoading] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importPreview, setImportPreview] = useState(null);
+  const [importOptions, setImportOptions] = useState({
+    replaceAll: false,
+    skipDuplicates: true
+  });
+
   // États pour les catégories
 
   // États pour les budgets
@@ -90,6 +115,13 @@ export default function ModernSettingsModal({
       icon: User,
       description: 'Gérez vos informations',
       color: 'from-orange-500 to-red-500'
+    },
+    { 
+      id: 'data', 
+      name: 'Import / Export', 
+      icon: Database,
+      description: 'Sauvegardez et restaurez vos données',
+      color: 'from-indigo-500 to-blue-500'
     }
   ];
 
@@ -218,14 +250,80 @@ export default function ModernSettingsModal({
         showMessage('success', result.message || 'Mot de passe changé avec succès');
         setEditingPassword(false);
         setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
-        setShowPasswords({ old: false, new: false, confirm: false });
       } else {
-        showMessage('error', result.error || 'Erreur lors du changement');
+        showMessage('error', result.error || 'Erreur lors du changement de mot de passe');
       }
     } catch (error) {
-      showMessage('error', 'Erreur inattendue lors du changement');
+      showMessage('error', 'Erreur inattendue lors du changement de mot de passe');
     } finally {
       setPasswordLoading(false);
+    }
+  };
+
+  // Handlers pour Import/Export
+  const handleExportData = async (format = 'json') => {
+    setExportLoading(true);
+    try {
+      await downloadExportFile(format);
+      showMessage('success', `Données exportées avec succès au format ${format.toUpperCase()}`);
+    } catch (error) {
+      console.error('Erreur lors de l\'export:', error);
+      showMessage('error', 'Erreur lors de l\'export des données');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setImportFile(file);
+    setImportPreview(null);
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      
+      // Aperçu basique des données
+      setImportPreview({
+        totalTransactions: data.transactions?.length || 0,
+        totalBudgets: data.budgets?.length || 0,
+        totalCategories: data.categories?.length || 0,
+        exportDate: data.metadata?.exportDate || 'N/A',
+        version: data.metadata?.version || 'N/A'
+      });
+    } catch (error) {
+      showMessage('error', 'Fichier invalide. Veuillez sélectionner un fichier JSON valide.');
+      setImportFile(null);
+    }
+  };
+
+  const handleImportData = async (replaceAll = false) => {
+    if (!importFile) {
+      showMessage('error', 'Veuillez sélectionner un fichier à importer');
+      return;
+    }
+
+    setImportLoading(true);
+    try {
+      const text = await importFile.text();
+      const result = await importUserData(JSON.parse(text), { replaceAll });
+      
+      if (result.success) {
+        showMessage('success', `Import réussi: ${result.summary}`);
+        setImportFile(null);
+        setImportPreview(null);
+        // Recharger les données dans l'app
+        window.location.reload();
+      } else {
+        showMessage('error', result.error || 'Erreur lors de l\'import');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'import:', error);
+      showMessage('error', 'Erreur lors de l\'import des données');
+    } finally {
+      setImportLoading(false);
     }
   };
 
@@ -804,6 +902,147 @@ export default function ModernSettingsModal({
                         <LogOut className="h-5 w-5" />
                         {loading ? 'Déconnexion...' : 'Se déconnecter'}
                       </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Import / Export */}
+              {activeTab === 'data' && (
+                <div className="space-y-6">
+                  {/* Export Section */}
+                  <div className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 ${
+                    darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'
+                  }`}>
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className={`p-4 rounded-2xl ${
+                        darkMode ? 'bg-blue-900/30' : 'bg-white'
+                      } shadow-lg`}>
+                        <Download className="h-8 w-8 text-blue-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-bold">Exporter vos données</h4>
+                        <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Sauvegardez toutes vos données financières
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        onClick={() => handleExportData('json')}
+                        disabled={exportLoading}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <FileText className="h-4 w-4" />
+                        {exportLoading ? 'Export...' : 'Exporter JSON'}
+                      </button>
+                      <button
+                        onClick={() => handleExportData('csv')}
+                        disabled={exportLoading}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <FileSpreadsheet className="h-4 w-4" />
+                        {exportLoading ? 'Export...' : 'Exporter CSV'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Import Section */}
+                  <div className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 ${
+                    darkMode ? 'bg-purple-900/20 border-purple-800' : 'bg-purple-50 border-purple-200'
+                  }`}>
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className={`p-4 rounded-2xl ${
+                        darkMode ? 'bg-purple-900/30' : 'bg-white'
+                      } shadow-lg`}>
+                        <Upload className="h-8 w-8 text-purple-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-bold">Importer vos données</h4>
+                        <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Restaurez vos données depuis un fichier d'export
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {/* File Input */}
+                      <div>
+                        <input
+                          type="file"
+                          accept=".json"
+                          onChange={handleFileChange}
+                          className="hidden"
+                          id="import-file"
+                        />
+                        <label
+                          htmlFor="import-file"
+                          className={`flex items-center gap-2 px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                            darkMode 
+                              ? 'border-gray-600 hover:border-purple-500 text-gray-300 hover:text-purple-400' 
+                              : 'border-gray-300 hover:border-purple-500 text-gray-600 hover:text-purple-600'
+                          }`}
+                        >
+                          <FileText className="h-5 w-5" />
+                          {importFile ? importFile.name : 'Sélectionner un fichier JSON'}
+                        </label>
+                      </div>
+
+                      {/* Import Preview */}
+                      {importPreview && (
+                        <div className={`p-4 rounded-lg border ${
+                          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+                        }`}>
+                          <h5 className="font-semibold mb-2">Aperçu du fichier :</h5>
+                          <div className="text-sm space-y-1">
+                            <p>• Transactions : {importPreview.totalTransactions}</p>
+                            <p>• Budgets : {importPreview.totalBudgets}</p>
+                            <p>• Catégories : {importPreview.totalCategories}</p>
+                            <p>• Exporté le : {new Date(importPreview.exportDate).toLocaleString('fr-FR')}</p>
+                            <p>• Version : {importPreview.version}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Import Options */}
+                      {importFile && (
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            onClick={() => handleImportData(false)}
+                            disabled={importLoading}
+                            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <Plus className="h-4 w-4" />
+                            {importLoading ? 'Import...' : 'Fusionner les données'}
+                          </button>
+                          <button
+                            onClick={() => handleImportData(true)}
+                            disabled={importLoading}
+                            className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            {importLoading ? 'Import...' : 'Remplacer tout'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Avertissement */}
+                  <div className={`p-4 rounded-lg border ${
+                    darkMode ? 'bg-yellow-900/20 border-yellow-800 text-yellow-200' : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                  }`}>
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-semibold">Important :</p>
+                        <ul className="mt-1 list-disc list-inside space-y-1">
+                          <li>Fusionner : Ajoute les nouvelles données sans supprimer les existantes</li>
+                          <li>Remplacer : Supprime toutes les données actuelles et les remplace</li>
+                          <li>Nous recommandons d'exporter vos données actuelles avant d'importer</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
