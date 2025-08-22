@@ -342,6 +342,55 @@ export const updatePassword = async (newPassword) => {
   }
 };
 
+/**
+ * Mise à jour de l'email (nécessite la re-authentification)
+ * @param {string} newEmail - Nouvel email
+ * @param {string} password - Mot de passe actuel pour vérification
+ * @returns {Promise<Object>} Résultat de la mise à jour
+ */
+export const updateEmail = async (newEmail, password) => {
+  try {
+    console.log('🔐 Mise à jour de l\'email...');
+    
+    // D'abord vérifier le mot de passe actuel en essayant de se connecter
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: 'Utilisateur non connecté' };
+    }
+
+    // Vérifier le mot de passe en tentant une re-authentification
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: currentUser.email,
+      password: password
+    });
+
+    if (authError) {
+      console.error('❌ Mot de passe incorrect:', authError);
+      return { success: false, error: 'Mot de passe incorrect' };
+    }
+
+    // Maintenant mettre à jour l'email
+    const { data, error } = await supabase.auth.updateUser({
+      email: newEmail
+    });
+
+    if (error) {
+      console.error('❌ Erreur lors de la mise à jour de l\'email:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log('✅ Email mis à jour avec succès, confirmation requise');
+    return { 
+      success: true, 
+      user: data.user,
+      message: 'Un email de confirmation a été envoyé à votre nouvelle adresse.'
+    };
+  } catch (error) {
+    console.error('❌ Erreur inattendue lors de la mise à jour de l\'email:', error);
+    return { success: false, error: 'Erreur inattendue lors de la mise à jour de l\'email' };
+  }
+};
+
 // =====================================================
 // UTILITAIRES
 // =====================================================

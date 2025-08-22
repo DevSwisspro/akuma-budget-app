@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   X, 
   Settings as SettingsIcon,
@@ -12,9 +12,12 @@ import {
   Sun,
   User,
   ChevronRight,
-  Info
+  Info,
+  Edit,
+  Save,
+  Mail
 } from 'lucide-react';
-import { signOut } from '../lib/supabase-auth';
+import { signOut, updateEmail } from '../lib/supabase-auth';
 import BudgetManagerInline from './BudgetManagerInline';
 
 export default function ModernSettingsModal({ 
@@ -28,6 +31,14 @@ export default function ModernSettingsModal({
   const [activeTab, setActiveTab] = useState('categories');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+
+  // États pour la modification d'email
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailData, setEmailData] = useState({
+    newEmail: '',
+    password: ''
+  });
+  const [emailLoading, setEmailLoading] = useState(false);
 
   // États pour les catégories
 
@@ -126,6 +137,63 @@ export default function ModernSettingsModal({
       setLoading(false);
     }
   };
+
+  const handleEmailUpdate = async () => {
+    if (!emailData.newEmail || !emailData.password) {
+      showMessage('error', 'Veuillez remplir tous les champs');
+      return;
+    }
+
+    if (emailData.newEmail === user?.email) {
+      showMessage('error', 'Le nouvel email doit être différent de l\'actuel');
+      return;
+    }
+
+    setEmailLoading(true);
+    try {
+      const result = await updateEmail(emailData.newEmail, emailData.password);
+      
+      if (result.success) {
+        showMessage('success', result.message || 'Email mis à jour avec succès');
+        setEditingEmail(false);
+        setEmailData({ newEmail: '', password: '' });
+      } else {
+        showMessage('error', result.error || 'Erreur lors de la mise à jour');
+      }
+    } catch (error) {
+      showMessage('error', 'Erreur inattendue lors de la mise à jour');
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const cancelEmailEdit = () => {
+    setEditingEmail(false);
+    setEmailData({ newEmail: '', password: '' });
+  };
+
+  // Gérer le scroll du body quand la modal est ouverte
+  useEffect(() => {
+    if (isOpen) {
+      // Empêcher le scroll du body quand la modal est ouverte
+      document.body.style.overflow = 'hidden';
+      // Ajouter un padding-right pour compenser la scrollbar qui disparaît
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
+    } else {
+      // Restaurer le scroll du body quand la modal se ferme
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+
+    // Cleanup au démontage du composant
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -231,21 +299,6 @@ export default function ModernSettingsModal({
               })}
             </div>
 
-            {/* Bouton de déconnexion moderne */}
-            <div className="mt-4 md:mt-8 pt-4 md:pt-8 border-t border-gray-700 hidden md:block">
-              <button
-                onClick={handleLogout}
-                disabled={loading}
-                className={`w-full flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 group ${
-                  darkMode 
-                    ? 'bg-gradient-to-r from-red-900 to-pink-900 hover:from-red-800 hover:to-pink-800 text-red-100 hover:text-white' 
-                    : 'bg-gradient-to-r from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 text-red-700 hover:text-red-800'
-                } disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:scale-105`}
-              >
-                <LogOut className="h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
-                <span className="font-semibold text-lg">Se déconnecter</span>
-              </button>
-            </div>
           </div>
 
           {/* Contenu principal avec scroll */}
@@ -405,18 +458,95 @@ export default function ModernSettingsModal({
                     </p>
                   </div>
 
+                  {/* Informations du compte */}
                   <div className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 ${
                     darkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-200'
                   }`}>
-                    <div className="flex items-center gap-6">
-                      <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center text-white text-2xl font-bold">
+                    <div className="flex items-start gap-6">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center text-white text-xl sm:text-2xl font-bold flex-shrink-0">
                         {user?.email?.charAt(0).toUpperCase() || 'U'}
                       </div>
-                      <div>
-                        <h4 className="text-xl font-bold">{user?.email || 'Utilisateur'}</h4>
-                        <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Membre depuis {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Récemment'}
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="text-lg sm:text-xl font-bold">Adresse email</h4>
+                          {!editingEmail && (
+                            <button
+                              onClick={() => setEditingEmail(true)}
+                              className={`p-2 rounded-lg hover:bg-opacity-20 transition-colors ${
+                                darkMode 
+                                  ? 'text-blue-400 hover:bg-blue-400' 
+                                  : 'text-blue-600 hover:bg-blue-600'
+                              }`}
+                              title="Modifier l'adresse email"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                        
+                        {!editingEmail ? (
+                          <div>
+                            <p className="text-sm sm:text-base font-medium break-all">{user?.email || 'Utilisateur'}</p>
+                            <p className={`text-xs sm:text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                              Membre depuis {user?.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : 'Récemment'}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Nouvelle adresse email
+                              </label>
+                              <input
+                                type="email"
+                                value={emailData.newEmail}
+                                onChange={(e) => setEmailData(prev => ({ ...prev, newEmail: e.target.value }))}
+                                className={`w-full px-3 py-2 rounded-lg border ${
+                                  darkMode 
+                                    ? 'border-gray-600 bg-gray-700 text-white' 
+                                    : 'border-gray-300 bg-white text-gray-900'
+                                } focus:ring-2 focus:ring-blue-500`}
+                                placeholder="nouveau@email.com"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Mot de passe actuel (requis)
+                              </label>
+                              <input
+                                type="password"
+                                value={emailData.password}
+                                onChange={(e) => setEmailData(prev => ({ ...prev, password: e.target.value }))}
+                                className={`w-full px-3 py-2 rounded-lg border ${
+                                  darkMode 
+                                    ? 'border-gray-600 bg-gray-700 text-white' 
+                                    : 'border-gray-300 bg-white text-gray-900'
+                                } focus:ring-2 focus:ring-blue-500`}
+                                placeholder="Votre mot de passe"
+                              />
+                            </div>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={handleEmailUpdate}
+                                disabled={emailLoading || !emailData.newEmail || !emailData.password}
+                                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              >
+                                <Save className="h-4 w-4" />
+                                {emailLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+                              </button>
+                              <button
+                                onClick={cancelEmailEdit}
+                                className={`px-4 py-2 rounded-lg border transition-colors ${
+                                  darkMode 
+                                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                }`}
+                              >
+                                Annuler
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -462,21 +592,6 @@ export default function ModernSettingsModal({
                 </div>
               )}
 
-              {/* Bouton de déconnexion mobile (visible seulement sur mobile) */}
-              <div className="md:hidden mt-8 pt-6 border-t border-gray-300 dark:border-gray-700">
-                <button
-                  onClick={handleLogout}
-                  disabled={loading}
-                  className={`w-full flex items-center justify-center gap-3 p-4 rounded-xl transition-all duration-300 ${
-                    darkMode 
-                      ? 'bg-gradient-to-r from-red-900 to-pink-900 hover:from-red-800 hover:to-pink-800 text-red-100 hover:text-white' 
-                      : 'bg-gradient-to-r from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 text-red-700 hover:text-red-800'
-                  } disabled:opacity-50 shadow-lg hover:shadow-xl`}
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span className="font-semibold">{loading ? 'Déconnexion...' : 'Se déconnecter'}</span>
-                </button>
-              </div>
 
             </div>
           </div>
