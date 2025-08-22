@@ -62,13 +62,23 @@ self.addEventListener('activate', event => {
           })
         );
       }),
-      // Forcer le rechargement de toutes les pages ouvertes (compatible tous navigateurs)
+      // Forcer le rechargement - Compatible Safari/WebKit
       self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
         return Promise.all(
           clients.map(client => {
             if (client.url.includes(self.location.origin)) {
               console.log('🔄 Force rechargement page:', client.url);
-              return client.navigate(client.url);
+              // Safari iOS ne supporte pas client.navigate, utiliser postMessage
+              if (client.navigate && typeof client.navigate === 'function') {
+                return client.navigate(client.url);
+              } else {
+                // Fallback pour Safari: message vers la page
+                client.postMessage({ 
+                  type: 'SW_FORCE_RELOAD',
+                  message: 'Service Worker updated - please reload'
+                });
+                return Promise.resolve();
+              }
             }
           })
         );

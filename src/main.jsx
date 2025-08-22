@@ -45,10 +45,17 @@ if ('serviceWorker' in navigator) {
       })
   })
 
-  // Écoute des messages du Service Worker
+  // Écoute des messages du Service Worker - Compatible Safari
   navigator.serviceWorker.addEventListener('message', event => {
     if (event.data && event.data.type === 'CACHE_UPDATED') {
       console.log('📱 Cache mis à jour');
+    }
+    // Gestion du rechargement forcé pour Safari
+    if (event.data && event.data.type === 'SW_FORCE_RELOAD') {
+      console.log('🔄 Rechargement demandé par SW (Safari)');
+      if (confirm('Une nouvelle version est disponible. Recharger maintenant ?')) {
+        window.location.reload();
+      }
     }
   });
 }

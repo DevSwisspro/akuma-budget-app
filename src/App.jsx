@@ -78,22 +78,37 @@ export default function App() {
   // Configuration : graphique camembert uniquement
   
   const [period, setPeriod] = useState(() => {
-    const saved = localStorage.getItem('akuma-budget-period');
-    return saved || "month";
+    try {
+      const saved = localStorage.getItem('akuma-budget-period');
+      return saved || "month";
+    } catch (error) {
+      console.warn('LocalStorage non disponible, utilisation valeurs par défaut');
+      return "month";
+    }
   });
   
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [favoriteChart, setFavoriteChart] = useState(() => {
-    const saved = localStorage.getItem('akuma-budget-favorite');
-    return saved || "pie";
+    try {
+      const saved = localStorage.getItem('akuma-budget-favorite');
+      return saved || "pie";
+    } catch (error) {
+      return "pie";
+    }
   });
   
-  // États UI
+  // États UI - Compatible Safari/WebKit
   const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('akuma-budget-dark-mode');
-    return saved === 'true' || window.matchMedia('(prefers-color-scheme: dark)').matches;
+    try {
+      const saved = localStorage.getItem('akuma-budget-dark-mode');
+      if (saved !== null) return saved === 'true';
+      // Détection préférence système cross-navigateur
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch (error) {
+      return false;
+    }
   });
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,15 +141,27 @@ export default function App() {
   // Sauvegarder les préférences dans localStorage
 
   useEffect(() => {
-    localStorage.setItem('akuma-budget-period', period);
+    try {
+      localStorage.setItem('akuma-budget-period', period);
+    } catch (error) {
+      console.warn('Impossible de sauvegarder la période');
+    }
   }, [period]);
 
   useEffect(() => {
-    localStorage.setItem('akuma-budget-favorite', favoriteChart);
+    try {
+      localStorage.setItem('akuma-budget-favorite', favoriteChart);
+    } catch (error) {
+      console.warn('Impossible de sauvegarder le graphique favori');
+    }
   }, [favoriteChart]);
 
   useEffect(() => {
-    localStorage.setItem('akuma-budget-dark-mode', darkMode.toString());
+    try {
+      localStorage.setItem('akuma-budget-dark-mode', darkMode.toString());
+    } catch (error) {
+      console.warn('Impossible de sauvegarder le mode sombre');
+    }
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
