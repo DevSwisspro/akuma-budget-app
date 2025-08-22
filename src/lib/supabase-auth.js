@@ -1,6 +1,6 @@
 // Importer le client Supabase existant pour éviter les conflits
 import { supabase } from './supabase.js';
-import { isTestUser, isDevOTP, getAuthRedirectUrl } from './auth-config.js';
+import { isTestUser, isDevOTP, getAuthRedirectUrl, isLocalEnvironment, getBaseUrl } from './auth-config.js';
 
 // =====================================================
 // FONCTIONS D'AUTHENTIFICATION
@@ -370,8 +370,13 @@ export const updateEmail = async (newEmail, password) => {
     }
 
     // Maintenant mettre à jour l'email avec l'URL de redirection forcée
-    const redirectUrl = getAuthRedirectUrl('/auth/callback');
-    console.log('🌐 URL de redirection email:', redirectUrl);
+    const redirectUrl = 'https://budget.dev-swiss.ch/auth/callback';
+    console.log('🌐 URL de redirection email FORCÉE:', redirectUrl);
+    console.log('🔍 Environment check:', {
+      isLocalEnv: isLocalEnvironment(),
+      baseUrl: getBaseUrl(),
+      configUrl: getAuthRedirectUrl('/auth/callback')
+    });
     
     const { data, error } = await supabase.auth.updateUser(
       { email: newEmail },

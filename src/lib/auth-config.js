@@ -12,7 +12,7 @@ export const AUTH_CONFIG = {
   devOTPCode: '000000',
   
   // URLs de production et développement
-  productionUrl: 'https://budget.dev-swiss.ch',
+  productionUrl: import.meta.env.VITE_PRODUCTION_URL || 'https://budget.dev-swiss.ch',
   localDomains: ['localhost', '127.0.0.1', '0.0.0.0']
 };
 
