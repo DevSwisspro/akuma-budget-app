@@ -420,6 +420,45 @@ export default function ModernSettingsModal({
                       </div>
                     </div>
                   </div>
+
+                  {/* Bouton de déconnexion */}
+                  <div className={`p-6 rounded-2xl border-2 ${
+                    darkMode ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-4 rounded-2xl ${
+                          darkMode ? 'bg-red-900/30' : 'bg-white'
+                        } shadow-lg`}>
+                          <LogOut className="h-8 w-8 text-red-500" />
+                        </div>
+                        <div>
+                          <h4 className="text-xl font-bold">Déconnexion</h4>
+                          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Fermer votre session en toute sécurité
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          setLoading(true);
+                          try {
+                            await signOut();
+                            window.location.reload();
+                          } catch (error) {
+                            console.error('Erreur déconnexion:', error);
+                          } finally {
+                            setLoading(false);
+                          }
+                        }}
+                        disabled={loading}
+                        className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        {loading ? 'Déconnexion...' : 'Se déconnecter'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 

@@ -594,6 +594,23 @@ export default function App() {
           </button>
         </div>
         {renderChart()}
+        
+        {/* Légende simplifiée pour mobile */}
+        {(type === "pie" || type === "bar") && data.length > 0 && (
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {data.slice(0, 6).map((entry, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-full flex-shrink-0" 
+                  style={{ backgroundColor: entry.fill }}
+                />
+                <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                  {entry.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -680,31 +697,15 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {user.email}
-              </span>
-              <button
-                onClick={() => setShowSettings(true)}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
-                title="Paramètres"
-              >
-                <SettingsIcon className="h-5 w-5" />
-              </button>
-              <button
-                onClick={handleSignOut}
-                className="px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-1"
-                title="Se déconnecter"
-              >
-                <LogOut className="h-4 w-4" />
-                Déconnexion
-              </button>
-            </div>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {user.email}
+            </span>
             <button
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={() => setShowSettings(true)}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+              title="Paramètres"
             >
-              {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              <SettingsIcon className="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -835,10 +836,10 @@ export default function App() {
           <DynamicChart 
             data={chartType === "line" || chartType === "area" ? timeSeriesData : chartData} 
             type={chartType} 
-            title={`${chartType === "pie" ? "Répartition des dépenses" : 
-                    chartType === "bar" ? "Dépenses par catégorie" : 
-                    chartType === "line" ? "Évolution temporelle" : 
-                    "Volume des finances"} - ${selectedCategory || 'Toutes catégories'}`}
+            title={`${chartType === "pie" ? "Répartition" : 
+                    chartType === "bar" ? "Par catégorie" : 
+                    chartType === "line" ? "Évolution" : 
+                    "Volume"}`}
           />
         )}
 
