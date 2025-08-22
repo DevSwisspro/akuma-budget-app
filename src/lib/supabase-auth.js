@@ -1,6 +1,6 @@
 // Importer le client Supabase existant pour éviter les conflits
 import { supabase } from './supabase.js';
-import { isTestUser, isDevOTP } from './auth-config.js';
+import { isTestUser, isDevOTP, getAuthRedirectUrl } from './auth-config.js';
 
 // =====================================================
 // FONCTIONS D'AUTHENTIFICATION
@@ -28,7 +28,7 @@ export const signUp = async (email, password, userData = {}) => {
           preferred_language: userData.preferred_language || 'fr',
           timezone: userData.timezone || 'Europe/Zurich'
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+        emailRedirectTo: getAuthRedirectUrl('/auth/callback')
       }
     });
 
@@ -209,7 +209,7 @@ export const sendOTP = async (email, isSignup = false) => {
       email,
       options: {
         shouldCreateUser: isSignup, // Créer l'utilisateur si inscription
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+        emailRedirectTo: getAuthRedirectUrl('/auth/callback')
       }
     });
 
@@ -294,7 +294,7 @@ export const resetPassword = async (email) => {
     console.log('🔐 Demande de réinitialisation de mot de passe pour:', email);
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`
+      redirectTo: getAuthRedirectUrl('/auth/reset-password')
     });
 
     if (error) {
@@ -388,6 +388,55 @@ export const updateEmail = async (newEmail, password) => {
   } catch (error) {
     console.error('❌ Erreur inattendue lors de la mise à jour de l\'email:', error);
     return { success: false, error: 'Erreur inattendue lors de la mise à jour de l\'email' };
+  }
+};
+
+/**
+ * Changement de mot de passe (nécessite l'ancien mot de passe)
+ * @param {string} oldPassword - Ancien mot de passe
+ * @param {string} newPassword - Nouveau mot de passe
+ * @returns {Promise<Object>} Résultat de la mise à jour
+ */
+export const changePassword = async (oldPassword, newPassword) => {
+  try {
+    console.log('🔐 Changement de mot de passe...');
+    
+    // D'abord vérifier l'ancien mot de passe
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: 'Utilisateur non connecté' };
+    }
+
+    // Vérifier l'ancien mot de passe en tentant une re-authentification
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: currentUser.email,
+      password: oldPassword
+    });
+
+    if (authError) {
+      console.error('❌ Ancien mot de passe incorrect:', authError);
+      return { success: false, error: 'Ancien mot de passe incorrect' };
+    }
+
+    // Maintenant mettre à jour le mot de passe
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      console.error('❌ Erreur lors du changement de mot de passe:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log('✅ Mot de passe changé avec succès');
+    return { 
+      success: true, 
+      user: data.user,
+      message: 'Mot de passe changé avec succès.'
+    };
+  } catch (error) {
+    console.error('❌ Erreur inattendue lors du changement de mot de passe:', error);
+    return { success: false, error: 'Erreur inattendue lors du changement de mot de passe' };
   }
 };
 

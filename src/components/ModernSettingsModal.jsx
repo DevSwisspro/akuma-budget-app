@@ -15,9 +15,12 @@ import {
   Info,
   Edit,
   Save,
-  Mail
+  Mail,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
-import { signOut, updateEmail } from '../lib/supabase-auth';
+import { signOut, updateEmail, changePassword } from '../lib/supabase-auth';
 import BudgetManagerInline from './BudgetManagerInline';
 
 export default function ModernSettingsModal({ 
@@ -39,6 +42,20 @@ export default function ModernSettingsModal({
     password: ''
   });
   const [emailLoading, setEmailLoading] = useState(false);
+
+  // États pour le changement de mot de passe
+  const [editingPassword, setEditingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    old: false,
+    new: false,
+    confirm: false
+  });
 
   // États pour les catégories
 
@@ -170,6 +187,59 @@ export default function ModernSettingsModal({
   const cancelEmailEdit = () => {
     setEditingEmail(false);
     setEmailData({ newEmail: '', password: '' });
+  };
+
+  const handlePasswordChange = async () => {
+    if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      showMessage('error', 'Veuillez remplir tous les champs');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      showMessage('error', 'Les nouveaux mots de passe ne correspondent pas');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      showMessage('error', 'Le nouveau mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+
+    if (passwordData.oldPassword === passwordData.newPassword) {
+      showMessage('error', 'Le nouveau mot de passe doit être différent de l\'ancien');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const result = await changePassword(passwordData.oldPassword, passwordData.newPassword);
+      
+      if (result.success) {
+        showMessage('success', result.message || 'Mot de passe changé avec succès');
+        setEditingPassword(false);
+        setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setShowPasswords({ old: false, new: false, confirm: false });
+      } else {
+        showMessage('error', result.error || 'Erreur lors du changement');
+      }
+    } catch (error) {
+      showMessage('error', 'Erreur inattendue lors du changement');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const cancelPasswordEdit = () => {
+    setEditingPassword(false);
+    setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+    setShowPasswords({ old: false, new: false, confirm: false });
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
   };
 
   // Gérer le scroll du body quand la modal est ouverte
@@ -536,6 +606,153 @@ export default function ModernSettingsModal({
                               </button>
                               <button
                                 onClick={cancelEmailEdit}
+                                className={`px-4 py-2 rounded-lg border transition-colors ${
+                                  darkMode 
+                                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                }`}
+                              >
+                                Annuler
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section changement de mot de passe */}
+                  <div className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 ${
+                    darkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <div className="flex items-start gap-6">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center text-white flex-shrink-0">
+                        <Lock className="h-6 w-6 sm:h-8 sm:w-8" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="text-lg sm:text-xl font-bold">Mot de passe</h4>
+                          {!editingPassword && (
+                            <button
+                              onClick={() => setEditingPassword(true)}
+                              className={`p-2 rounded-lg hover:bg-opacity-20 transition-colors ${
+                                darkMode 
+                                  ? 'text-blue-400 hover:bg-blue-400' 
+                                  : 'text-blue-600 hover:bg-blue-600'
+                              }`}
+                              title="Modifier le mot de passe"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                        
+                        {!editingPassword ? (
+                          <div>
+                            <p className="text-sm sm:text-base font-medium">••••••••••••</p>
+                            <p className={`text-xs sm:text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                              Cliquez sur modifier pour changer votre mot de passe
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {/* Ancien mot de passe */}
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Ancien mot de passe
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type={showPasswords.old ? "text" : "password"}
+                                  value={passwordData.oldPassword}
+                                  onChange={(e) => setPasswordData(prev => ({ ...prev, oldPassword: e.target.value }))}
+                                  className={`w-full px-3 py-2 pr-10 rounded-lg border ${
+                                    darkMode 
+                                      ? 'border-gray-600 bg-gray-700 text-white' 
+                                      : 'border-gray-300 bg-white text-gray-900'
+                                  } focus:ring-2 focus:ring-blue-500`}
+                                  placeholder="Votre mot de passe actuel"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => togglePasswordVisibility('old')}
+                                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                  {showPasswords.old ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Nouveau mot de passe */}
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Nouveau mot de passe
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type={showPasswords.new ? "text" : "password"}
+                                  value={passwordData.newPassword}
+                                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                                  className={`w-full px-3 py-2 pr-10 rounded-lg border ${
+                                    darkMode 
+                                      ? 'border-gray-600 bg-gray-700 text-white' 
+                                      : 'border-gray-300 bg-white text-gray-900'
+                                  } focus:ring-2 focus:ring-blue-500`}
+                                  placeholder="Au moins 6 caractères"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => togglePasswordVisibility('new')}
+                                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                  {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Confirmation nouveau mot de passe */}
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Confirmer le nouveau mot de passe
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type={showPasswords.confirm ? "text" : "password"}
+                                  value={passwordData.confirmPassword}
+                                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                  className={`w-full px-3 py-2 pr-10 rounded-lg border ${
+                                    passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword
+                                      ? 'border-red-500 ring-1 ring-red-500'
+                                      : darkMode 
+                                        ? 'border-gray-600 bg-gray-700 text-white' 
+                                        : 'border-gray-300 bg-white text-gray-900'
+                                  } focus:ring-2 focus:ring-blue-500`}
+                                  placeholder="Répétez le nouveau mot de passe"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => togglePasswordVisibility('confirm')}
+                                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                  {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                              </div>
+                              {passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+                                <p className="text-red-500 text-xs mt-1">Les mots de passe ne correspondent pas</p>
+                              )}
+                            </div>
+
+                            <div className="flex gap-3">
+                              <button
+                                onClick={handlePasswordChange}
+                                disabled={passwordLoading || !passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword}
+                                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              >
+                                <Save className="h-4 w-4" />
+                                {passwordLoading ? 'Sauvegarde...' : 'Changer le mot de passe'}
+                              </button>
+                              <button
+                                onClick={cancelPasswordEdit}
                                 className={`px-4 py-2 rounded-lg border transition-colors ${
                                   darkMode 
                                     ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
