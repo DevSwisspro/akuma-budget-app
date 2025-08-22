@@ -53,13 +53,7 @@ const fmt = (n) => CHF.format(n || 0);
 
 // Ancien système supprimé - types et catégories maintenant en base de données
 
-// Types de graphiques disponibles
-const CHART_TYPES = [
-  { id: "pie", name: "Camembert", icon: "🥧" },
-  { id: "bar", name: "Barres", icon: "📊" },
-  { id: "line", name: "Courbe", icon: "📈" },
-  { id: "area", name: "Aire", icon: "🌊" },
-];
+// Graphique unique : camembert pour répartition des dépenses
 
 // Périodes disponibles
 const PERIODS = [
@@ -81,11 +75,7 @@ export default function App() {
   const [showBudgetManager, setShowBudgetManager] = useState(false);
 
 
-  // États de configuration
-  const [chartType, setChartType] = useState(() => {
-    const saved = localStorage.getItem('akuma-budget-chart-type');
-    return saved || "pie";
-  });
+  // Configuration : graphique camembert uniquement
   
   const [period, setPeriod] = useState(() => {
     const saved = localStorage.getItem('akuma-budget-period');
@@ -134,9 +124,6 @@ export default function App() {
   }, []);
 
   // Sauvegarder les préférences dans localStorage
-  useEffect(() => {
-    localStorage.setItem('akuma-budget-chart-type', chartType);
-  }, [chartType]);
 
   useEffect(() => {
     localStorage.setItem('akuma-budget-period', period);
@@ -434,10 +421,10 @@ export default function App() {
                   data={data}
                   cx="50%"
                   cy="50%"
-                  outerRadius={120}
-                  innerRadius={50}
+                  outerRadius="80%"
+                  innerRadius="40%"
                   dataKey="value"
-                  label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                   labelLine={false}
                 >
                   {data.map((entry, index) => (
@@ -455,139 +442,13 @@ export default function App() {
                     backgroundColor: darkMode ? "#374151" : "rgba(255,255,255,0.98)", 
                     border: "1px solid #e5e7eb", 
                     borderRadius: 8, 
-                    padding: 8,
+                    padding: 12,
                     color: darkMode ? "#f9fafb" : "#000"
                   }}
                 />
               </PieChart>
             </ResponsiveContainer>
           );
-
-        case "bar": {
-          const maxValue = Math.max(...data.map(d => Number(d.value) || 0));
-          
-          // Calcul dynamique de l'échelle Y
-          const calculateYAxisDomain = (max) => {
-            if (max === 0) return [0, 100];
-            
-            // Arrondir vers le haut au multiple approprié
-            let roundedMax;
-            if (max <= 100) roundedMax = Math.ceil(max / 10) * 10;
-            else if (max <= 1000) roundedMax = Math.ceil(max / 100) * 100;
-            else if (max <= 10000) roundedMax = Math.ceil(max / 500) * 500;
-            else roundedMax = Math.ceil(max / 1000) * 1000;
-            
-            return [0, roundedMax];
-          };
-          
-          const [yMin, yMax] = calculateYAxisDomain(maxValue);
-          
-          const formatYAxis = (value) => {
-            if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-            if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
-            return value.toString();
-          };
-          
-          return (
-            <ResponsiveContainer width="100%" height={height}>
-              <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#374151" : "#f0f0f0"} />
-                <XAxis dataKey="name" tick={false} axisLine={false} />
-                <YAxis 
-                  domain={[yMin, yMax]}
-                  tick={{ fontSize: 14, fill: darkMode ? "#f9fafb" : "#666" }} 
-                  tickFormatter={formatYAxis} 
-                />
-                <ReTooltip 
-                  formatter={(value) => fmt(Number(value))} 
-                  contentStyle={{ 
-                    backgroundColor: darkMode ? "#374151" : "rgba(255,255,255,0.98)", 
-                    border: "1px solid #e5e7eb", 
-                    borderRadius: 8, 
-                    padding: 12,
-                    color: darkMode ? "#f9fafb" : "#000"
-                  }}
-                />
-                <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          );
-        }
-
-        case "line": {
-          const maxLineValue = Math.max(
-            ...timeSeriesData.flatMap(d => [Number(d.revenus) || 0, Number(d.depenses) || 0, Number(d.net) || 0])
-          );
-          const formatLineYAxis = (value) => {
-            if (maxLineValue >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-            if (maxLineValue >= 1000) return `${(value / 1000).toFixed(0)}k`;
-            return value.toString();
-          };
-          
-          return (
-            <ResponsiveContainer width="100%" height={height}>
-              <LineChart data={timeSeriesData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#374151" : "#f0f0f0"} />
-                <XAxis dataKey="month" tick={{ fontSize: 14, fill: darkMode ? "#f9fafb" : "#666" }} />
-                <YAxis 
-                  domain={['dataMin - 200', 'dataMax + 300']}
-                  tick={{ fontSize: 14, fill: darkMode ? "#f9fafb" : "#666" }} 
-                  tickFormatter={formatLineYAxis} 
-                />
-                <ReTooltip 
-                  formatter={(value) => fmt(Number(value))} 
-                  contentStyle={{ 
-                    backgroundColor: darkMode ? "#374151" : "rgba(255,255,255,0.98)", 
-                    border: "1px solid #e5e7eb", 
-                    borderRadius: 8, 
-                    padding: 12,
-                    color: darkMode ? "#f9fafb" : "#000"
-                  }}
-                />
-                <Line type="monotone" dataKey="revenus" stroke="#22c55e" strokeWidth={4} dot={{ fill: "#22c55e", strokeWidth: 2, r: 6 }} />
-                <Line type="monotone" dataKey="depenses" stroke="#ef4444" strokeWidth={4} dot={{ fill: "#ef4444", strokeWidth: 2, r: 6 }} />
-                <Line type="monotone" dataKey="net" stroke="#3b82f6" strokeWidth={4} strokeDasharray="5 5" dot={{ fill: "#3b82f6", strokeWidth: 2, r: 6 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          );
-        }
-
-        case "area": {
-          const maxAreaValue = Math.max(
-            ...timeSeriesData.flatMap(d => [Number(d.revenus) || 0, Number(d.depenses) || 0])
-          );
-          const formatAreaYAxis = (value) => {
-            if (maxAreaValue >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-            if (maxAreaValue >= 1000) return `${(value / 1000).toFixed(0)}k`;
-            return value.toString();
-          };
-          
-          return (
-            <ResponsiveContainer width="100%" height={height}>
-              <AreaChart data={timeSeriesData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#374151" : "#f0f0f0"} />
-                <XAxis dataKey="month" tick={{ fontSize: 14, fill: darkMode ? "#f9fafb" : "#666" }} />
-                <YAxis 
-                  domain={[0, 'dataMax + 400']}
-                  tick={{ fontSize: 14, fill: darkMode ? "#f9fafb" : "#666" }} 
-                  tickFormatter={formatAreaYAxis} 
-                />
-                <ReTooltip 
-                  formatter={(value) => fmt(Number(value))} 
-                  contentStyle={{ 
-                    backgroundColor: darkMode ? "#374151" : "rgba(255,255,255,0.98)", 
-                    border: "1px solid #e5e7eb", 
-                    borderRadius: 8, 
-                    padding: 12,
-                    color: darkMode ? "#f9fafb" : "#000"
-                  }}
-                />
-                <Area type="monotone" dataKey="depenses" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} />
-                <Area type="monotone" dataKey="revenus" stroke="#22c55e" fill="#22c55e" fillOpacity={0.3} />
-              </AreaChart>
-            </ResponsiveContainer>
-          );
-        }
 
         default:
           return <div>Aucun graphique disponible</div>;
@@ -791,27 +652,6 @@ export default function App() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Configuration</h3>
             
             <div className="flex flex-wrap items-center gap-4">
-              {/* Sélection du type de graphique */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Graphique:</span>
-                <div className="flex gap-1">
-                  {CHART_TYPES.map((chart) => (
-                    <button
-                      key={chart.id}
-                      onClick={() => setChartType(chart.id)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        chartType === chart.id 
-                          ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400' 
-                          : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-                      }`}
-                      title={chart.name}
-                    >
-                      <span className="text-sm">{chart.icon}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Sélection de la période */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Période:</span>
@@ -848,15 +688,12 @@ export default function App() {
         </div>
 
         {/* Graphique principal - UNIQUEMENT celui sélectionné */}
-        {/* Graphique principal - Affiché seulement si des données existent */}
-        {(chartData.length > 0 || timeSeriesData.length > 0 || filteredTx.length > 0) && (
+        {/* Graphique camembert - Répartition des dépenses */}
+        {chartData.length > 0 && (
           <DynamicChart 
-            data={chartType === "line" || chartType === "area" ? timeSeriesData : chartData} 
-            type={chartType} 
-            title={`${chartType === "pie" ? "Répartition" : 
-                    chartType === "bar" ? "Par catégorie" : 
-                    chartType === "line" ? "Évolution" : 
-                    "Volume"}`}
+            data={chartData} 
+            type="pie" 
+            title="Répartition des dépenses"
           />
         )}
 
