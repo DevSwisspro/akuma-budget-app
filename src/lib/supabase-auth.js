@@ -443,10 +443,20 @@ export const changePassword = async (oldPassword, newPassword) => {
     }
 
     console.log('✅ Mot de passe changé avec succès');
+    
+    // Envoyer un email de confirmation sécurisé
+    const notificationResult = await sendPasswordChangeNotification(currentUser.email);
+    if (notificationResult.success) {
+      console.log('📧 Email de sécurité changement mot de passe envoyé');
+    } else {
+      console.warn('⚠️ Erreur envoi email de sécurité:', notificationResult.error);
+      // Ne pas faire échouer la fonction si l'email échoue
+    }
+    
     return { 
       success: true, 
       user: data.user,
-      message: 'Mot de passe changé avec succès.'
+      message: 'Mot de passe changé avec succès. Un email de confirmation a été envoyé.'
     };
   } catch (error) {
     console.error('❌ Erreur inattendue lors du changement de mot de passe:', error);
@@ -474,6 +484,41 @@ export const isAuthenticated = async () => {
 export const getCurrentUserId = async () => {
   const user = await getCurrentUser();
   return user?.id || null;
+};
+
+/**
+ * Envoi d'un email de notification de changement de mot de passe
+ * @param {string} email - Email de l'utilisateur
+ * @returns {Promise<Object>} Résultat de l'envoi
+ */
+export const sendPasswordChangeNotification = async (email) => {
+  try {
+    console.log('📧 Envoi notification changement mot de passe pour:', email);
+    
+    // URL de réinitialisation d'urgence avec l'email pré-rempli
+    const emergencyResetUrl = `${getAuthRedirectUrl('/auth/emergency-reset')}?email=${encodeURIComponent(email)}&reason=password_changed`;
+    
+    // Envoyer un email de réinitialisation qui servira de notification
+    // L'utilisateur recevra un email avec un lien vers la page emergency-reset
+    // Note: Dans un environnement de production, il faudrait configurer un template email personnalisé
+    // dans Supabase pour indiquer "Votre mot de passe a été changé - Si ce n'était pas vous, cliquez ici"
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: emergencyResetUrl
+    });
+
+    if (error) {
+      console.error('❌ Erreur envoi notification:', error);
+      // Ne pas faire échouer si l'email échoue - log seulement
+      console.warn('⚠️ Impossible d\'envoyer l\'email de notification de sécurité');
+      return { success: false, error: error.message };
+    }
+
+    console.log('✅ Notification changement mot de passe envoyée');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Erreur notification changement mot de passe:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 /**

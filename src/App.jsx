@@ -30,6 +30,7 @@ import {
 import ModernSettingsModal from "./components/ModernSettingsModal";
 import AuthModal from "./components/AuthModal";
 import AuthCallback from "./components/AuthCallback";
+import EmergencyReset from "./components/EmergencyReset";
 import TransactionForm from "./components/TransactionForm";
 import TransactionsList from "./components/TransactionsList";
 import BudgetManager from "./components/BudgetManager";
@@ -114,12 +115,18 @@ export default function App() {
   
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Détection du callback d'authentification
+  // Détection des pages spéciales d'authentification
   const isAuthCallback = window.location.pathname === '/auth/callback';
+  const isEmergencyReset = window.location.pathname === '/auth/emergency-reset';
 
   // Si c'est un callback d'authentification, afficher le composant dédié
   if (isAuthCallback) {
     return <AuthCallback />;
+  }
+
+  // Si c'est une réinitialisation d'urgence, afficher le composant dédié
+  if (isEmergencyReset) {
+    return <EmergencyReset />;
   }
 
   // Ancien formulaire supprimé - utilisation du TransactionForm unifié
