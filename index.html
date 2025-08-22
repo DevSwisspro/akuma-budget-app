@@ -58,5 +58,112 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Service Worker pour PWA - Compatible tous navigateurs -->
+    <script>
+      // Enregistrement Service Worker optimisé pour Safari/Brave/Chrome
+      if ('serviceWorker' in navigator) {
+        // Attendre que la page soit complètement chargée
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js', {
+            scope: '/',
+            updateViaCache: 'none' // Force la vérification d'updates
+          })
+          .then((registration) => {
+            console.log('✅ Service Worker enregistré:', registration.scope);
+            
+            // Écouter les mises à jour du SW
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Nouvelle version disponible
+                  console.log('🔄 Nouvelle version PWA disponible');
+                  
+                  // Pour Safari/iOS : notification subtile
+                  if (/iPad|iPhone|iPod|Safari/.test(navigator.userAgent)) {
+                    setTimeout(() => {
+                      if (confirm('🚀 Nouvelle version disponible ! Recharger l\'application ?')) {
+                        window.location.reload();
+                      }
+                    }, 2000);
+                  } else {
+                    // Pour autres navigateurs : mise à jour automatique
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                }
+              });
+            });
+          })
+          .catch((error) => {
+            console.log('❌ Erreur Service Worker:', error);
+          });
+          
+          // Écouter les messages du Service Worker
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'SW_FORCE_RELOAD') {
+              console.log('🔄 Rechargement forcé par SW');
+              window.location.reload();
+            }
+          });
+          
+          // Vérifier les mises à jour périodiquement (pour Safari)
+          setInterval(() => {
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+              registrations.forEach((registration) => {
+                registration.update();
+              });
+            });
+          }, 60000); // Vérifier toutes les minutes
+        });
+      } else {
+        console.log('❌ Service Worker non supporté dans ce navigateur');
+      }
+      
+      // Détection d'installation PWA pour encourager l'installation
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('💾 PWA installable détectée');
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Afficher un bouton d'installation après 10 secondes
+        setTimeout(() => {
+          if (deferredPrompt && !window.matchMedia('(display-mode: standalone)').matches) {
+            const installBanner = document.createElement('div');
+            installBanner.innerHTML = `
+              <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 10000; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                <div style="margin-bottom: 10px; font-weight: 600;">📱 Installer Akuma Budget</div>
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 12px;">Accès rapide depuis votre écran d'accueil</div>
+                <div>
+                  <button onclick="this.parentElement.parentElement.parentElement.style.display='none'" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 16px; border-radius: 6px; margin-right: 8px; cursor: pointer;">Plus tard</button>
+                  <button onclick="installPWA()" style="background: rgba(255,255,255,0.9); border: none; color: #333; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">Installer</button>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(installBanner);
+          }
+        }, 10000);
+      });
+      
+      // Fonction d'installation PWA
+      window.installPWA = () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+              console.log('✅ PWA installée par l\'utilisateur');
+            }
+            deferredPrompt = null;
+          });
+        }
+      };
+      
+      // Détection si l'app est lancée en mode PWA
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+        console.log('📱 Application lancée en mode PWA');
+        document.documentElement.classList.add('pwa-mode');
+      }
+    </script>
   </body>
 </html>

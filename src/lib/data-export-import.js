@@ -189,18 +189,62 @@ export const downloadExportFile = async (format = 'json') => {
       throw new Error(`Format ${format} non supporté`);
     }
     
-    // Créer et télécharger le fichier
+    // Créer et télécharger le fichier avec compatibilité Safari/iOS
     const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
     
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Détection Safari/iOS pour utilisation alternative
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
-    URL.revokeObjectURL(url);
+    if (isSafari || isIOS) {
+      // Pour Safari/iOS : ouvrir dans un nouvel onglet avec data URL
+      const dataUrl = `data:${mimeType};charset=utf-8,${encodeURIComponent(content)}`;
+      const newWindow = window.open(dataUrl, '_blank');
+      
+      // Fallback si popup bloqué
+      if (!newWindow) {
+        // Créer un textarea temporaire pour copier le contenu
+        const textarea = document.createElement('textarea');
+        textarea.value = content;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+          document.execCommand('copy');
+          alert(`✅ Données copiées dans le presse-papier!\n\nPour sauvegarder:\n1. Créez un nouveau fichier ${fileName}\n2. Collez le contenu (Cmd+V)\n3. Sauvegardez le fichier`);
+        } catch (err) {
+          alert(`📱 Pour sauvegarder sur Safari/iOS:\n\n1. Sélectionnez tout le texte affiché\n2. Copiez (Cmd+C ou maintenir et copier)\n3. Collez dans un fichier texte\n4. Sauvegardez comme ${fileName}`);
+        }
+        
+        document.body.removeChild(textarea);
+      } else {
+        // Instructions pour l'utilisateur
+        setTimeout(() => {
+          alert(`📱 Fichier ouvert dans un nouvel onglet!\n\nPour sauvegarder:\n1. Utilisez "Partager" → "Sauvegarder dans Fichiers"\n2. Ou copiez le contenu et collez dans Notes/Fichiers\n3. Nommez le fichier: ${fileName}`);
+        }, 1000);
+      }
+    } else {
+      // Pour les autres navigateurs (Chrome, Firefox, Edge, Brave)
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      
+      // Assurer la compatibilité avec Brave et autres navigateurs
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      
+      // Trigger download
+      link.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+    }
     
     console.log('✅ Fichier téléchargé:', fileName);
     return { success: true, fileName, size: blob.size };

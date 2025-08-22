@@ -1,10 +1,15 @@
 // Service Worker pour Akuma Budget PWA
-// Version 2.0 - Cache avec versioning automatique et mise à jour forcée
+// Version 2.2 - Optimisé pour Safari, Brave et compatibilité mobile
 
 // Version automatique basée sur la date de build
-const APP_VERSION = '2.1-' + Date.now();
+const APP_VERSION = '2.2-' + Date.now();
 const CACHE_NAME = `akuma-budget-${APP_VERSION}`;
 const STATIC_CACHE_NAME = `akuma-budget-static-${APP_VERSION}`;
+
+// Détection du navigateur pour optimisations spécifiques
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+const isBrave = navigator.brave && navigator.brave.isBrave;
 
 // Ressources essentielles à mettre en cache
 const ESSENTIAL_RESOURCES = [

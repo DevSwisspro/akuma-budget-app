@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Import/Export - Akuma Budget</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .test-section { 
+            background: white; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        button { 
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        button:hover { 
+            background: #2563eb; 
+        }
+        .result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 4px; 
+            background: #f8f9fa; 
+            border-left: 4px solid #3b82f6; 
+        }
+        .success { border-left-color: #10b981; background: #ecfdf5; }
+        .error { border-left-color: #ef4444; background: #fef2f2; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Système Import/Export - Akuma Budget</h1>
+    
+    <div class="test-section">
+        <h2>📤 Test Export</h2>
+        <p>Testez la génération et le téléchargement des fichiers d'export</p>
+        <button onclick="testExportJSON()">Tester Export JSON</button>
+        <button onclick="testExportCSV()">Tester Export CSV</button>
+        <div id="export-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📥 Test Import</h2>
+        <p>Testez la validation et l'import des fichiers</p>
+        <button onclick="testImportValidation()">Tester Validation Import</button>
+        <button onclick="generateTestData()">Générer Données Test</button>
+        <div id="import-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Test Fonctionnalités</h2>
+        <p>Testez les utilitaires et validations</p>
+        <button onclick="testFileValidation()">Tester Validation Fichier</button>
+        <button onclick="testDataStructure()">Tester Structure Données</button>
+        <div id="function-results"></div>
+    </div>
+
+    <script type="module">
+        // Import des fonctions depuis les modules
+        let exportUserData, importUserData, downloadExportFile, validateImportFile, readImportFile;
+        
+        try {
+            const importModule = await import('./src/lib/data-export-import.js');
+            exportUserData = importModule.exportUserData;
+            importUserData = importModule.importUserData;
+            downloadExportFile = importModule.downloadExportFile;
+            validateImportFile = importModule.validateImportFile;
+            readImportFile = importModule.readImportFile;
+            
+            console.log('✅ Modules Import/Export chargés avec succès');
+        } catch (error) {
+            console.error('❌ Erreur chargement modules:', error);
+            document.body.innerHTML += '<div class="result error">❌ Impossible de charger les modules. Vérifiez que les fichiers sont déployés.</div>';
+        }
+
+        // Fonctions de test
+        window.testExportJSON = async () => {
+            const resultsDiv = document.getElementById('export-results');
+            resultsDiv.innerHTML = '<p>⏳ Test export JSON en cours...</p>';
+            
+            try {
+                const data = await exportUserData();
+                resultsDiv.innerHTML = `
+                    <div class="result success">
+                        <h4>✅ Export JSON réussi !</h4>
+                        <p><strong>Transactions:</strong> ${data.transactions?.length || 0}</p>
+                        <p><strong>Budgets:</strong> ${data.budgets?.length || 0}</p>
+                        <p><strong>Catégories:</strong> ${data.categories?.length || 0}</p>
+                        <p><strong>Taille:</strong> ${JSON.stringify(data).length} caractères</p>
+                        <p><strong>Version:</strong> ${data.metadata?.version}</p>
+                    </div>
+                `;
+                console.log('Export data:', data);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="result error">❌ Erreur export: ${error.message}</div>`;
+                console.error('Erreur export:', error);
+            }
+        };
+
+        window.testExportCSV = async () => {
+            const resultsDiv = document.getElementById('export-results');
+            resultsDiv.innerHTML = '<p>⏳ Test export CSV en cours...</p>';
+            
+            try {
+                await downloadExportFile('csv');
+                resultsDiv.innerHTML += `<div class="result success">✅ Export CSV lancé ! Vérifiez votre dossier de téléchargements.</div>`;
+            } catch (error) {
+                resultsDiv.innerHTML += `<div class="result error">❌ Erreur export CSV: ${error.message}</div>`;
+                console.error('Erreur export CSV:', error);
+            }
+        };
+
+        window.testImportValidation = async () => {
+            const resultsDiv = document.getElementById('import-results');
+            resultsDiv.innerHTML = '<p>⏳ Test validation import...</p>';
+            
+            // Générer des données de test
+            const testData = {
+                metadata: {
+                    version: "1.0.0",
+                    exportDate: new Date().toISOString(),
+                    source: "test"
+                },
+                transactions: [
+                    {
+                        id: "test-1",
+                        amount: 100,
+                        description: "Test transaction",
+                        category: "test",
+                        type: "depense",
+                        date: new Date().toISOString()
+                    }
+                ],
+                budgets: [],
+                categories: ["test"],
+                preferences: {}
+            };
+            
+            try {
+                const validation = validateImportFile(testData);
+                resultsDiv.innerHTML = `
+                    <div class="result ${validation.isValid ? 'success' : 'error'}">
+                        <h4>${validation.isValid ? '✅' : '❌'} Validation: ${validation.isValid ? 'Réussie' : 'Échouée'}</h4>
+                        <p><strong>Erreurs:</strong> ${validation.errors.length}</p>
+                        ${validation.errors.length > 0 ? '<ul>' + validation.errors.map(e => '<li>' + e + '</li>').join('') + '</ul>' : ''}
+                        <p><strong>Avertissements:</strong> ${validation.warnings.length}</p>
+                        ${validation.warnings.length > 0 ? '<ul>' + validation.warnings.map(w => '<li>' + w + '</li>').join('') + '</ul>' : ''}
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="result error">❌ Erreur validation: ${error.message}</div>`;
+            }
+        };
+
+        window.generateTestData = async () => {
+            const resultsDiv = document.getElementById('import-results');
+            
+            try {
+                const testData = await exportUserData();
+                const blob = new Blob([JSON.stringify(testData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'akuma-budget-test-data.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                resultsDiv.innerHTML += `<div class="result success">✅ Fichier de test généré et téléchargé !</div>`;
+            } catch (error) {
+                resultsDiv.innerHTML += `<div class="result error">❌ Erreur génération: ${error.message}</div>`;
+            }
+        };
+
+        window.testFileValidation = () => {
+            const resultsDiv = document.getElementById('function-results');
+            
+            const tests = [
+                { name: 'Fichier valide', data: { metadata: { version: '1.0.0' }, transactions: [], budgets: [], categories: [] } },
+                { name: 'Sans metadata', data: { transactions: [], budgets: [] } },
+                { name: 'Structure incorrecte', data: { invalid: true } },
+                { name: 'Données corrompues', data: null }
+            ];
+            
+            let html = '<h4>Tests de validation:</h4>';
+            tests.forEach(test => {
+                try {
+                    const result = validateImportFile(test.data);
+                    html += `<p><strong>${test.name}:</strong> ${result.isValid ? '✅ Valide' : '❌ Invalide'} (${result.errors.length} erreurs)</p>`;
+                } catch (error) {
+                    html += `<p><strong>${test.name}:</strong> ❌ Exception (${error.message})</p>`;
+                }
+            });
+            
+            resultsDiv.innerHTML = `<div class="result">${html}</div>`;
+        };
+
+        window.testDataStructure = async () => {
+            const resultsDiv = document.getElementById('function-results');
+            
+            try {
+                const data = await exportUserData();
+                const structure = {
+                    hasMetadata: !!data.metadata,
+                    hasTransactions: Array.isArray(data.transactions),
+                    hasBudgets: Array.isArray(data.budgets),
+                    hasCategories: Array.isArray(data.categories),
+                    hasPreferences: typeof data.preferences === 'object',
+                    transactionCount: data.transactions?.length || 0,
+                    budgetCount: data.budgets?.length || 0,
+                    categoryCount: data.categories?.length || 0
+                };
+                
+                resultsDiv.innerHTML += `
+                    <div class="result">
+                        <h4>📊 Structure des données:</h4>
+                        <pre>${JSON.stringify(structure, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML += `<div class="result error">❌ Erreur analyse: ${error.message}</div>`;
+            }
+        };
+
+        // Message de bienvenue
+        console.log(`
+🧪 TESTS IMPORT/EXPORT AKUMA BUDGET
+
+Fonctions disponibles:
+- testExportJSON() : Test export JSON
+- testExportCSV() : Test export CSV  
+- testImportValidation() : Test validation import
+- generateTestData() : Générer fichier test
+- testFileValidation() : Test validation fichiers
+- testDataStructure() : Analyser structure données
+
+Tous les tests sont également disponibles via les boutons de l'interface.
+        `);
+    </script>
+</body>
+</html>

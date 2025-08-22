@@ -9,14 +9,58 @@
   }
 }
 
-/* Styles personnalisés */
+/* Optimisations PWA et navigateurs */
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Optimisation pour Safari iOS */
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   body {
     @apply antialiased;
+    /* Prévenir le zoom sur les inputs sur Safari iOS */
+    -webkit-text-size-adjust: 100%;
+    /* Support pull-to-refresh désactivé */
+    overscroll-behavior-y: contain;
+  }
+  
+  /* Styles spécifiques PWA */
+  .pwa-mode {
+    /* Masquer la barre d'adresse sur PWA */
+    --safe-area-inset-top: env(safe-area-inset-top, 0);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom, 0);
+    --safe-area-inset-left: env(safe-area-inset-left, 0);
+    --safe-area-inset-right: env(safe-area-inset-right, 0);
+  }
+  
+  /* Optimisation tactile pour tous les éléments interactifs */
+  button, 
+  [role="button"], 
+  input[type="submit"], 
+  input[type="button"] {
+    /* Améliorer la réponse tactile */
+    touch-action: manipulation;
+    /* Éviter le délai de 300ms sur Safari */
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Optimisation des inputs pour mobile */
+  input, textarea, select {
+    /* Empêcher le zoom automatique sur iOS Safari */
+    font-size: 16px;
+    /* Améliorer l'apparence sur Safari */
+    -webkit-appearance: none;
+    border-radius: 8px;
+  }
+  
+  /* Fix pour les sticky elements sur Safari */
+  .sticky-safe {
+    position: -webkit-sticky;
+    position: sticky;
+    top: var(--safe-area-inset-top, 0);
   }
 }
 
