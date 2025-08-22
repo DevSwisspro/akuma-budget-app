@@ -465,19 +465,36 @@ export default function App() {
 
         case "bar": {
           const maxValue = Math.max(...data.map(d => Number(d.value) || 0));
+          
+          // Calcul dynamique de l'échelle Y
+          const calculateYAxisDomain = (max) => {
+            if (max === 0) return [0, 100];
+            
+            // Arrondir vers le haut au multiple approprié
+            let roundedMax;
+            if (max <= 100) roundedMax = Math.ceil(max / 10) * 10;
+            else if (max <= 1000) roundedMax = Math.ceil(max / 100) * 100;
+            else if (max <= 10000) roundedMax = Math.ceil(max / 500) * 500;
+            else roundedMax = Math.ceil(max / 1000) * 1000;
+            
+            return [0, roundedMax];
+          };
+          
+          const [yMin, yMax] = calculateYAxisDomain(maxValue);
+          
           const formatYAxis = (value) => {
-            if (maxValue >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-            if (maxValue >= 1000) return `${(value / 1000).toFixed(0)}k`;
+            if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+            if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
             return value.toString();
           };
           
           return (
             <ResponsiveContainer width="100%" height={height}>
-              <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+              <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#374151" : "#f0f0f0"} />
-                <XAxis dataKey="name" tick={{ fontSize: 14, fill: darkMode ? "#f9fafb" : "#666" }} />
+                <XAxis dataKey="name" tick={false} axisLine={false} />
                 <YAxis 
-                  domain={[0, 'dataMax + 500']}
+                  domain={[yMin, yMax]}
                   tick={{ fontSize: 14, fill: darkMode ? "#f9fafb" : "#666" }} 
                   tickFormatter={formatYAxis} 
                 />
