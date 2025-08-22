@@ -131,57 +131,57 @@ export default function ModernSettingsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
-      <div className={`relative w-full max-w-7xl max-h-[95vh] mx-4 rounded-3xl shadow-2xl overflow-hidden ${
+      <div className={`relative w-full max-w-7xl max-h-[95vh] mx-2 sm:mx-4 rounded-lg sm:rounded-3xl shadow-2xl overflow-hidden ${
         darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
       }`}>
         
         {/* Header avec gradient animé */}
-        <div className={`relative p-8 ${
+        <div className={`relative p-4 sm:p-8 ${
           darkMode 
             ? 'bg-gradient-to-r from-slate-800 via-purple-900 to-slate-800' 
             : 'bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600'
         }`}>
           <div className="flex items-center justify-between text-white">
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 sm:gap-6">
               <div className="relative">
-                <div className="p-4 bg-white bg-opacity-20 rounded-2xl backdrop-blur-sm">
-                  <SettingsIcon className="h-10 w-10" />
+                <div className="p-2 sm:p-4 bg-white bg-opacity-20 rounded-xl sm:rounded-2xl backdrop-blur-sm">
+                  <SettingsIcon className="h-6 w-6 sm:h-10 sm:w-10" />
                 </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-400 rounded-full border-2 border-white"></div>
               </div>
               <div>
-                <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
+                <h2 className="text-xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
                   Paramètres
                 </h2>
-                <p className="text-blue-100 text-lg mt-2">
+                <p className="text-blue-100 text-sm sm:text-lg mt-1 sm:mt-2">
                   Personnalisez votre expérience Akuma Budget
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="group p-3 rounded-2xl hover:bg-white hover:bg-opacity-20 transition-all duration-300"
+              className="group p-2 sm:p-3 rounded-xl sm:rounded-2xl hover:bg-white hover:bg-opacity-20 transition-all duration-300"
             >
-              <X className="h-7 w-7 group-hover:rotate-90 transition-transform duration-300" />
+              <X className="h-5 w-5 sm:h-7 sm:w-7 group-hover:rotate-90 transition-transform duration-300" />
             </button>
           </div>
         </div>
 
-        <div className="flex h-[calc(95vh-160px)]">
+        <div className="flex flex-col md:flex-row h-[calc(95vh-120px)] sm:h-[calc(95vh-160px)]">
           {/* Sidebar de navigation ultra-moderne */}
-          <div className={`w-96 p-8 border-r ${
+          <div className={`w-full md:w-80 lg:w-96 p-4 sm:p-8 border-b md:border-b-0 md:border-r overflow-x-auto md:overflow-x-visible overflow-y-visible ${
             darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
           }`}>
-            <div className="space-y-3">
+            <div className="flex md:flex-col space-x-2 md:space-x-0 md:space-y-3 pb-4 md:pb-0">
               {settingsTabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full text-left p-5 rounded-2xl transition-all duration-300 group relative overflow-hidden ${
+                    className={`flex-shrink-0 md:w-full text-left p-3 sm:p-5 rounded-xl md:rounded-2xl transition-all duration-300 group relative overflow-hidden ${
                       activeTab === tab.id
-                        ? 'bg-gradient-to-r ' + tab.color + ' text-white shadow-2xl scale-105 transform'
+                        ? 'bg-gradient-to-r ' + tab.color + ' text-white shadow-2xl md:scale-105 transform'
                         : darkMode
                           ? 'hover:bg-gray-700 text-gray-300 hover:text-white'
                           : 'hover:bg-white hover:shadow-xl text-gray-600 hover:text-gray-900'
@@ -192,15 +192,15 @@ export default function ModernSettingsModal({
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white via-opacity-20 to-transparent transform -skew-x-12 animate-pulse"></div>
                     )}
                     
-                    <div className="relative z-10 flex items-center gap-5">
-                      <div className={`p-3 rounded-xl transition-all duration-300 ${
+                    <div className="relative z-10 flex md:flex-row items-center gap-2 md:gap-5">
+                      <div className={`p-2 md:p-3 rounded-lg md:rounded-xl transition-all duration-300 ${
                         activeTab === tab.id
                           ? 'bg-white bg-opacity-20 backdrop-blur-sm'
                           : darkMode 
                             ? 'bg-gray-600 group-hover:bg-gray-500'
                             : 'bg-gray-200 group-hover:bg-gray-300'
                       }`}>
-                        <Icon className={`h-6 w-6 ${
+                        <Icon className={`h-4 w-4 md:h-6 md:w-6 ${
                           activeTab === tab.id 
                             ? 'text-white' 
                             : darkMode 
@@ -208,9 +208,9 @@ export default function ModernSettingsModal({
                               : 'text-gray-600 group-hover:text-gray-900'
                         }`} />
                       </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-lg">{tab.name}</div>
-                        <div className={`text-sm mt-1 ${
+                      <div className="flex-1 hidden md:block">
+                        <div className="font-semibold text-sm md:text-lg">{tab.name}</div>
+                        <div className={`text-xs md:text-sm mt-1 ${
                           activeTab === tab.id 
                             ? 'text-white text-opacity-90' 
                             : darkMode 
@@ -220,7 +220,7 @@ export default function ModernSettingsModal({
                           {tab.description}
                         </div>
                       </div>
-                      <ChevronRight className={`h-5 w-5 transition-all duration-300 ${
+                      <ChevronRight className={`h-3 w-3 md:h-5 md:w-5 transition-all duration-300 hidden md:block ${
                         activeTab === tab.id 
                           ? 'text-white transform rotate-90' 
                           : 'text-gray-400 group-hover:text-gray-600'
@@ -232,7 +232,7 @@ export default function ModernSettingsModal({
             </div>
 
             {/* Bouton de déconnexion moderne */}
-            <div className="mt-8 pt-8 border-t border-gray-700">
+            <div className="mt-4 md:mt-8 pt-4 md:pt-8 border-t border-gray-700 hidden md:block">
               <button
                 onClick={handleLogout}
                 disabled={loading}
@@ -250,11 +250,11 @@ export default function ModernSettingsModal({
 
           {/* Contenu principal avec scroll */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-8">
+            <div className="p-4 sm:p-8">
               
               {/* Message de notification moderne */}
               {message.text && (
-                <div className={`mb-6 p-4 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top duration-300 ${
+                <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-3 animate-in slide-in-from-top duration-300 ${
                   message.type === 'success' 
                     ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200'
                     : 'bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border border-red-200'
@@ -273,16 +273,16 @@ export default function ModernSettingsModal({
 
               {/* Contenu des onglets */}
               {activeTab === 'categories' && (
-                <div className="space-y-8">
+                <div className="space-y-4 sm:space-y-8">
                   <div>
-                    <h3 className="text-2xl font-bold mb-2">Gestion des Catégories</h3>
-                    <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <h3 className="text-xl sm:text-2xl font-bold mb-2">Gestion des Catégories</h3>
+                    <p className={`text-sm sm:text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       Organisez vos transactions avec des catégories personnalisées
                     </p>
                   </div>
 
                   {categoryTypes.map((type) => (
-                    <div key={type.id} className={`p-6 rounded-2xl border-2 ${
+                    <div key={type.id} className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 ${
                       darkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-200'
                     }`}>
                       {/* En-tête de la catégorie */}
@@ -299,7 +299,7 @@ export default function ModernSettingsModal({
                       </div>
                       
                       {/* Catégories existantes */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4 sm:mb-6">
                         {getCategoriesByType(type.id).map(category => (
                           <div
                             key={category.id}
@@ -336,10 +336,10 @@ export default function ModernSettingsModal({
               )}
 
               {activeTab === 'budgets' && (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   <div>
-                    <h3 className="text-2xl font-bold mb-2">Gestion des Budgets</h3>
-                    <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <h3 className="text-xl sm:text-2xl font-bold mb-2">Gestion des Budgets</h3>
+                    <p className={`text-sm sm:text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       Configurez vos budgets mensuels par catégorie
                     </p>
                   </div>
@@ -355,16 +355,16 @@ export default function ModernSettingsModal({
               )}
 
               {activeTab === 'appearance' && (
-                <div className="space-y-8">
+                <div className="space-y-4 sm:space-y-8">
                   <div>
-                    <h3 className="text-2xl font-bold mb-2">Apparence</h3>
-                    <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <h3 className="text-xl sm:text-2xl font-bold mb-2">Apparence</h3>
+                    <p className={`text-sm sm:text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       Personnalisez l&apos;apparence de votre application
                     </p>
                   </div>
 
                   {/* Toggle mode sombre moderne */}
-                  <div className={`p-6 rounded-2xl border-2 ${
+                  <div className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 ${
                     darkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-200'
                   }`}>
                     <div className="flex items-center justify-between">
@@ -397,15 +397,15 @@ export default function ModernSettingsModal({
               )}
 
               {activeTab === 'account' && (
-                <div className="space-y-8">
+                <div className="space-y-4 sm:space-y-8">
                   <div>
-                    <h3 className="text-2xl font-bold mb-2">Informations du Compte</h3>
-                    <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <h3 className="text-xl sm:text-2xl font-bold mb-2">Informations du Compte</h3>
+                    <p className={`text-sm sm:text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       Gérez vos informations personnelles
                     </p>
                   </div>
 
-                  <div className={`p-6 rounded-2xl border-2 ${
+                  <div className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 ${
                     darkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-200'
                   }`}>
                     <div className="flex items-center gap-6">
@@ -422,7 +422,7 @@ export default function ModernSettingsModal({
                   </div>
 
                   {/* Bouton de déconnexion */}
-                  <div className={`p-6 rounded-2xl border-2 ${
+                  <div className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 ${
                     darkMode ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'
                   }`}>
                     <div className="flex items-center justify-between">
@@ -461,6 +461,22 @@ export default function ModernSettingsModal({
                   </div>
                 </div>
               )}
+
+              {/* Bouton de déconnexion mobile (visible seulement sur mobile) */}
+              <div className="md:hidden mt-8 pt-6 border-t border-gray-300 dark:border-gray-700">
+                <button
+                  onClick={handleLogout}
+                  disabled={loading}
+                  className={`w-full flex items-center justify-center gap-3 p-4 rounded-xl transition-all duration-300 ${
+                    darkMode 
+                      ? 'bg-gradient-to-r from-red-900 to-pink-900 hover:from-red-800 hover:to-pink-800 text-red-100 hover:text-white' 
+                      : 'bg-gradient-to-r from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 text-red-700 hover:text-red-800'
+                  } disabled:opacity-50 shadow-lg hover:shadow-xl`}
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="font-semibold">{loading ? 'Déconnexion...' : 'Se déconnecter'}</span>
+                </button>
+              </div>
 
             </div>
           </div>

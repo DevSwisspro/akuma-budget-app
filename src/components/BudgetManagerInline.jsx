@@ -173,7 +173,7 @@ const BudgetManagerInline = ({ darkMode = false, onBudgetChange }) => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* Sélection de type */}
             <div>
@@ -310,7 +310,7 @@ const BudgetManagerInline = ({ darkMode = false, onBudgetChange }) => {
             <p className="text-sm mt-1">Créez votre premier budget ci-dessus</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {budgets.map(budget => (
               <div
                 key={budget.id}
