@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Email System - Akuma Budget</title>
+</head>
+<body>
+    <h1>🧪 Test Système Email Français</h1>
+    
+    <button onclick="testEmailSystem()">Tester les Templates Email</button>
+    <div id="results"></div>
+    
+    <script type="module">
+        async function testEmailSystem() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>⏳ Test en cours...</p>';
+            
+            try {
+                // Tester les imports
+                const { generatePasswordChangeEmail } = await import('./src/lib/email-templates.js');
+                const email = generatePasswordChangeEmail('test@example.com');
+                
+                results.innerHTML = `
+                    <h3>✅ Test réussi !</h3>
+                    <p><strong>Subject:</strong> ${email.subject}</p>
+                    <p><strong>URL:</strong> ${email.emergencyResetUrl}</p>
+                    <p>Les templates email français fonctionnent !</p>
+                `;
+                
+                console.log('✅ Système email français opérationnel');
+                
+            } catch (error) {
+                results.innerHTML = `
+                    <h3>❌ Erreur</h3>
+                    <p>${error.message}</p>
+                    <p>Vérifiez que les fichiers sont bien déployés.</p>
+                `;
+                console.error('❌ Erreur test:', error);
+            }
+        }
+        
+        window.testEmailSystem = testEmailSystem;
+        
+        // Auto-test au chargement
+        setTimeout(testEmailSystem, 1000);
+    </script>
+</body>
+</html>
