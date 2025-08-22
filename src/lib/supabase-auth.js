@@ -495,26 +495,35 @@ export const sendPasswordChangeNotification = async (email) => {
   try {
     console.log('📧 Envoi notification changement mot de passe pour:', email);
     
-    // URL de réinitialisation d'urgence avec l'email pré-rempli
+    // Essayer d'abord notre service email personnalisé français
+    try {
+      const { sendCustomPasswordChangeEmail } = await import('./custom-email-service.js');
+      const customResult = await sendCustomPasswordChangeEmail(email);
+      
+      if (customResult.success) {
+        console.log('✅ Email français personnalisé envoyé via', customResult.service);
+        return customResult;
+      }
+    } catch (customError) {
+      console.warn('⚠️ Service email personnalisé non disponible, fallback Supabase:', customError.message);
+    }
+    
+    // Fallback: Supabase avec template par défaut
     const emergencyResetUrl = `${getAuthRedirectUrl('/auth/emergency-reset')}?email=${encodeURIComponent(email)}&reason=password_changed`;
     
-    // Envoyer un email de réinitialisation qui servira de notification
-    // L'utilisateur recevra un email avec un lien vers la page emergency-reset
-    // Note: Dans un environnement de production, il faudrait configurer un template email personnalisé
-    // dans Supabase pour indiquer "Votre mot de passe a été changé - Si ce n'était pas vous, cliquez ici"
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: emergencyResetUrl
     });
 
     if (error) {
-      console.error('❌ Erreur envoi notification:', error);
-      // Ne pas faire échouer si l'email échoue - log seulement
-      console.warn('⚠️ Impossible d\'envoyer l\'email de notification de sécurité');
+      console.error('❌ Erreur envoi notification Supabase:', error);
       return { success: false, error: error.message };
     }
 
-    console.log('✅ Notification changement mot de passe envoyée');
-    return { success: true };
+    console.log('✅ Email envoyé via Supabase (template par défaut)');
+    console.log('💡 Pour un template français complet, configurez le template dans la console Supabase ou activez EmailJS');
+    
+    return { success: true, service: 'Supabase', note: 'Template par défaut utilisé' };
   } catch (error) {
     console.error('❌ Erreur notification changement mot de passe:', error);
     return { success: false, error: error.message };

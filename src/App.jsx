@@ -42,6 +42,11 @@ import {
   onAuthStateChange
 } from './lib/supabase-auth';
 
+// Import utilitaires email test (en développement)
+if (import.meta.env.DEV) {
+  import('./lib/email-test-utils.js').catch(console.warn);
+}
+
 // ---------- helpers ----------
 const CHF = new Intl.NumberFormat("fr-CH", { style: "currency", currency: "CHF" });
 const fmt = (n) => CHF.format(n || 0);
