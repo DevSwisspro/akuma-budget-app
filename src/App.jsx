@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import ModernSettingsModal from "./components/ModernSettingsModal";
 import AuthModal from "./components/AuthModal";
+import AuthCallback from "./components/AuthCallback";
 import TransactionForm from "./components/TransactionForm";
 import TransactionsList from "./components/TransactionsList";
 import BudgetManager from "./components/BudgetManager";
@@ -112,6 +113,14 @@ export default function App() {
   });
   
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Détection du callback d'authentification
+  const isAuthCallback = window.location.pathname === '/auth/callback';
+
+  // Si c'est un callback d'authentification, afficher le composant dédié
+  if (isAuthCallback) {
+    return <AuthCallback />;
+  }
 
   // Ancien formulaire supprimé - utilisation du TransactionForm unifié
 

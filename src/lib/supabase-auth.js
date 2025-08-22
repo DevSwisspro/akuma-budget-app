@@ -369,10 +369,14 @@ export const updateEmail = async (newEmail, password) => {
       return { success: false, error: 'Mot de passe incorrect' };
     }
 
-    // Maintenant mettre à jour l'email
-    const { data, error } = await supabase.auth.updateUser({
-      email: newEmail
-    });
+    // Maintenant mettre à jour l'email avec l'URL de redirection forcée
+    const redirectUrl = getAuthRedirectUrl('/auth/callback');
+    console.log('🌐 URL de redirection email:', redirectUrl);
+    
+    const { data, error } = await supabase.auth.updateUser(
+      { email: newEmail },
+      { emailRedirectTo: redirectUrl }
+    );
 
     if (error) {
       console.error('❌ Erreur lors de la mise à jour de l\'email:', error);
@@ -400,6 +404,11 @@ export const updateEmail = async (newEmail, password) => {
 export const changePassword = async (oldPassword, newPassword) => {
   try {
     console.log('🔐 Changement de mot de passe...');
+    
+    // Validation du nouveau mot de passe
+    if (!newPassword || newPassword.length < 6) {
+      return { success: false, error: 'Le nouveau mot de passe doit contenir au moins 6 caractères' };
+    }
     
     // D'abord vérifier l'ancien mot de passe
     const currentUser = await getCurrentUser();
