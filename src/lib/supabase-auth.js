@@ -389,10 +389,25 @@ export const updateEmail = async (newEmail, password) => {
     }
 
     console.log('✅ Email mis à jour avec succès, confirmation requise');
+    
+    // Envoyer une notification de sécurité pour le changement d'email
+    try {
+      const { sendCustomEmailChangeEmail } = await import('./custom-email-service.js');
+      const notificationResult = await sendCustomEmailChangeEmail(newEmail, currentUser.email);
+      
+      if (notificationResult.success) {
+        console.log('📧 Email de sécurité changement adresse envoyé');
+      } else {
+        console.warn('⚠️ Erreur envoi notification changement email:', notificationResult.error);
+      }
+    } catch (emailError) {
+      console.warn('⚠️ Service email notification non disponible:', emailError.message);
+    }
+    
     return { 
       success: true, 
       user: data.user,
-      message: 'Un email de confirmation a été envoyé à votre nouvelle adresse.'
+      message: 'Un email de confirmation a été envoyé à votre nouvelle adresse. Un email de sécurité a également été envoyé.'
     };
   } catch (error) {
     console.error('❌ Erreur inattendue lors de la mise à jour de l\'email:', error);

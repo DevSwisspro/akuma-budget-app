@@ -1,4 +1,8 @@
-import { generatePasswordChangeEmail } from './email-templates.js';
+import { 
+  generatePasswordChangeEmail,
+  generateSignupConfirmationEmail,
+  generateEmailChangeEmail 
+} from './email-templates.js';
 import { getAuthRedirectUrl } from './auth-config.js';
 
 /**
@@ -45,7 +49,7 @@ export const sendCustomPasswordChangeEmail = async (userEmail) => {
 /**
  * Envoi via EmailJS (gratuit, côté client)
  */
-const sendViaEmailJS = async (userEmail, emailContent) => {
+const sendViaEmailJS = async (userEmail, emailContent, templateType = 'password_change') => {
   try {
     const templateParams = {
       to_email: userEmail,
@@ -72,9 +76,77 @@ const sendViaEmailJS = async (userEmail, emailContent) => {
 };
 
 /**
+ * Envoie un email de confirmation d'inscription en français
+ * @param {string} userEmail - Email de l'utilisateur
+ * @param {string} token - Token de confirmation
+ * @returns {Promise<Object>} Résultat de l'envoi
+ */
+export const sendCustomSignupConfirmationEmail = async (userEmail, token) => {
+  try {
+    console.log('📧 Envoi email confirmation inscription français pour:', userEmail);
+    
+    const emailContent = generateSignupConfirmationEmail(userEmail, token);
+    
+    console.log('📋 Template inscription généré:', {
+      subject: emailContent.subject,
+      confirmationUrl: emailContent.confirmationUrl
+    });
+    
+    // Essayer les différents services
+    if (typeof window !== 'undefined' && window.emailjs) {
+      return await sendViaEmailJS(userEmail, emailContent, 'signup_confirmation');
+    }
+    
+    if (import.meta.env.VITE_RESEND_API_KEY) {
+      return await sendViaResend(userEmail, emailContent, 'signup');
+    }
+    
+    return await sendViaSupabaseFallback(userEmail, emailContent, 'signup');
+    
+  } catch (error) {
+    console.error('❌ Erreur envoi email inscription:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Envoie un email de notification de changement d'adresse en français
+ * @param {string} newEmail - Nouvelle adresse email
+ * @param {string} oldEmail - Ancienne adresse email
+ * @returns {Promise<Object>} Résultat de l'envoi
+ */
+export const sendCustomEmailChangeEmail = async (newEmail, oldEmail) => {
+  try {
+    console.log('📧 Envoi email changement adresse français pour:', newEmail);
+    
+    const emailContent = generateEmailChangeEmail(newEmail, oldEmail);
+    
+    console.log('📋 Template changement email généré:', {
+      subject: emailContent.subject,
+      restoreUrl: emailContent.restoreUrl
+    });
+    
+    // Essayer les différents services
+    if (typeof window !== 'undefined' && window.emailjs) {
+      return await sendViaEmailJS(newEmail, emailContent, 'email_change');
+    }
+    
+    if (import.meta.env.VITE_RESEND_API_KEY) {
+      return await sendViaResend(newEmail, emailContent, 'email_change');
+    }
+    
+    return await sendViaSupabaseFallback(newEmail, emailContent, 'email_change');
+    
+  } catch (error) {
+    console.error('❌ Erreur envoi email changement adresse:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Envoi via Resend API (premium, côté serveur)
  */
-const sendViaResend = async (userEmail, emailContent) => {
+const sendViaResend = async (userEmail, emailContent, templateType = 'password_change') => {
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -108,7 +180,7 @@ const sendViaResend = async (userEmail, emailContent) => {
 /**
  * Fallback via Supabase avec template personnalisé dans le contenu
  */
-const sendViaSupabaseFallback = async (userEmail, emailContent) => {
+const sendViaSupabaseFallback = async (userEmail, emailContent, templateType = 'password_change') => {
   try {
     // Import dynamique pour éviter les erreurs côté serveur
     const { supabase } = await import('./supabase.js');

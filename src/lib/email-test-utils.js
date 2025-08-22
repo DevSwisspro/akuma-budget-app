@@ -2,8 +2,16 @@
  * Utilitaires de test pour le système d'email personnalisé Akuma Budget
  */
 
-import { generatePasswordChangeEmail } from './email-templates.js';
+import { 
+  generatePasswordChangeEmail,
+  generateSignupConfirmationEmail,
+  generateEmailChangeEmail 
+} from './email-templates.js';
 import { sendPasswordChangeNotification } from './supabase-auth.js';
+import { 
+  sendCustomSignupConfirmationEmail,
+  sendCustomEmailChangeEmail 
+} from './custom-email-service.js';
 
 /**
  * Teste la génération du template email français
@@ -29,6 +37,95 @@ export const testEmailTemplate = (email = 'test@example.com') => {
   previewWindow.document.title = 'Preview Email - Akuma Budget';
   
   return emailContent;
+};
+
+/**
+ * Teste la génération du template inscription français
+ */
+export const testSignupTemplate = (email = 'test@example.com', token = 'test-token') => {
+  console.log('🧪 Test génération template inscription français');
+  
+  const emailContent = generateSignupConfirmationEmail(email, token);
+  
+  console.log('📧 Template inscription généré:');
+  console.log('Subject:', emailContent.subject);
+  console.log('Confirmation URL:', emailContent.confirmationUrl);
+  
+  // Aperçu dans une nouvelle fenêtre
+  const previewWindow = window.open('', '_blank', 'width=800,height=600');
+  previewWindow.document.write(emailContent.html);
+  previewWindow.document.title = 'Preview Inscription - Akuma Budget';
+  
+  return emailContent;
+};
+
+/**
+ * Teste la génération du template changement email français
+ */
+export const testEmailChangeTemplate = (newEmail = 'nouveau@example.com', oldEmail = 'ancien@example.com') => {
+  console.log('🧪 Test génération template changement email français');
+  
+  const emailContent = generateEmailChangeEmail(newEmail, oldEmail);
+  
+  console.log('📧 Template changement email généré:');
+  console.log('Subject:', emailContent.subject);
+  console.log('Restore URL:', emailContent.restoreUrl);
+  
+  // Aperçu dans une nouvelle fenêtre
+  const previewWindow = window.open('', '_blank', 'width=800,height=600');
+  previewWindow.document.write(emailContent.html);
+  previewWindow.document.title = 'Preview Changement Email - Akuma Budget';
+  
+  return emailContent;
+};
+
+/**
+ * Teste l'envoi complet de l'email d'inscription
+ */
+export const testSignupNotification = async (email = 'test@example.com', token = 'test-token') => {
+  console.log('🧪 Test envoi email inscription français');
+  console.log('📧 Email destinataire:', email);
+  
+  try {
+    const result = await sendCustomSignupConfirmationEmail(email, token);
+    
+    if (result.success) {
+      console.log('✅ Test inscription réussi!');
+      console.log('Service utilisé:', result.service || 'Supabase');
+    } else {
+      console.log('❌ Test inscription échoué:', result.error);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('❌ Erreur test inscription:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Teste l'envoi complet de l'email de changement d'adresse
+ */
+export const testEmailChangeNotification = async (newEmail = 'nouveau@example.com', oldEmail = 'ancien@example.com') => {
+  console.log('🧪 Test envoi email changement adresse français');
+  console.log('📧 Nouvelle adresse:', newEmail);
+  console.log('📧 Ancienne adresse:', oldEmail);
+  
+  try {
+    const result = await sendCustomEmailChangeEmail(newEmail, oldEmail);
+    
+    if (result.success) {
+      console.log('✅ Test changement adresse réussi!');
+      console.log('Service utilisé:', result.service || 'Supabase');
+    } else {
+      console.log('❌ Test changement adresse échoué:', result.error);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('❌ Erreur test changement adresse:', error);
+    return { success: false, error: error.message };
+  }
 };
 
 /**
@@ -121,15 +218,31 @@ export const checkEmailSetup = () => {
  */
 if (typeof window !== 'undefined') {
   window.akumaEmailTest = {
-    testTemplate: testEmailTemplate,
-    testNotification: testPasswordChangeNotification,
+    // Templates de prévisualisation
+    testPasswordTemplate: testEmailTemplate,
+    testSignupTemplate: testSignupTemplate,
+    testEmailChangeTemplate: testEmailChangeTemplate,
+    
+    // Envois réels
+    testPasswordNotification: testPasswordChangeNotification,
+    testSignupNotification: testSignupNotification,
+    testEmailChangeNotification: testEmailChangeNotification,
+    
+    // Configuration
     setupHelp: showEmailJSSetup,
     checkSetup: checkEmailSetup
   };
   
-  console.log('🧪 Fonctions de test email disponibles:');
-  console.log('- akumaEmailTest.testTemplate() : Prévisualiser template français');
-  console.log('- akumaEmailTest.testNotification() : Tester envoi complet');
-  console.log('- akumaEmailTest.setupHelp() : Instructions configuration');
-  console.log('- akumaEmailTest.checkSetup() : Vérifier setup actuel');
+  console.log('🧪 Fonctions de test email françaises disponibles:');
+  console.log('📋 TEMPLATES (prévisualisation):');
+  console.log('  - akumaEmailTest.testPasswordTemplate() : Changement mot de passe');
+  console.log('  - akumaEmailTest.testSignupTemplate() : Inscription');
+  console.log('  - akumaEmailTest.testEmailChangeTemplate() : Changement adresse');
+  console.log('📧 ENVOIS REELS:');
+  console.log('  - akumaEmailTest.testPasswordNotification() : Envoi mot de passe');
+  console.log('  - akumaEmailTest.testSignupNotification() : Envoi inscription');
+  console.log('  - akumaEmailTest.testEmailChangeNotification() : Envoi changement adresse');
+  console.log('🔧 CONFIGURATION:');
+  console.log('  - akumaEmailTest.setupHelp() : Instructions EmailJS');
+  console.log('  - akumaEmailTest.checkSetup() : Vérifier services disponibles');
 }
