@@ -552,12 +552,9 @@ export default function App() {
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-xl mb-6">
                 <Wallet className="h-10 w-10 text-white" />
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2 font-inter">
                 Akuma Budget
               </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-300">
-                Gestion de budget personnelle moderne
-              </p>
             </div>
 
             {/* Boutons d'action */}
@@ -613,28 +610,29 @@ export default function App() {
   return (
     <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-neutral-50'} transition-colors duration-200`}>
       <div className="mx-auto max-w-7xl space-y-4 p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Wallet className="h-8 w-8 text-blue-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Akuma Budget</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Gestion de budget personnelle</p>
+        {/* Header Modern */}
+        <header className="modern-header p-4 sm:p-6">
+          <div className="flex items-center justify-between">
+            {/* Logo et nom */}
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-md">
+                <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white font-inter tracking-tight">
+                Akuma Budget
+              </h1>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {user.email}
-            </span>
+            
+            {/* Bouton paramètres */}
             <button
               onClick={() => setShowSettings(true)}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+              className="p-2.5 sm:p-3 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-800 dark:hover:text-white transition-all duration-200 shadow-sm hover:shadow-md touch-manipulation"
               title="Paramètres"
             >
               <SettingsIcon className="h-5 w-5" />
             </button>
           </div>
-        </div>
+        </header>
 
 
         {/* Nouveau formulaire unifié */}
